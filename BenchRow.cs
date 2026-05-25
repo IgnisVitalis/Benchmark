@@ -1,0 +1,11 @@
+record BenchRow(
+    Guid           Id,
+    string         ColText,
+    string         ColVarchar,
+    decimal        ColDecimal,
+    int            ColInt,
+    long           ColLong,
+    bool           ColBool,
+    DateTimeOffset ColTs,
+    double         ColDouble,
+    short          ColShort);
