@@ -1,4 +1,4 @@
-class BenchmarkConfig
+public class BenchmarkConfig
 {
     public int    BulkCount     { get; set; } = 10_000_000;
     public int    SingleCount   { get; set; } = 100;
@@ -6,7 +6,7 @@ class BenchmarkConfig
 public List<ProviderConfig> Providers { get; set; } = [];
 }
 
-class ProviderConfig
+public class ProviderConfig
 {
     public string Type         { get; set; } = "";
     public bool   Enabled      { get; set; } = true;

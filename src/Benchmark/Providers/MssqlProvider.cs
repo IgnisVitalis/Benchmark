@@ -2,7 +2,7 @@ using System.Data;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 
-class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
+public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
 {
     public string Name => "MSSQL";
 
@@ -19,8 +19,6 @@ class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
             END
             """);
         await Exec(conn, "CREATE DATABASE [Benchmark]");
-
-        Console.WriteLine("Database 'Benchmark' created.\n");
     }
 
     public async Task DropDatabaseAsync()
@@ -32,8 +30,6 @@ class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
             ALTER DATABASE [Benchmark] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
             DROP DATABASE [Benchmark];
             """);
-
-        Console.WriteLine("\nDatabase 'Benchmark' dropped.");
     }
 
     public async Task SetupTableAsync()
@@ -56,7 +52,6 @@ class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
                 col_short   smallint         NOT NULL
             );
             """);
-        Console.WriteLine("Table ready.\n");
     }
 
     public async Task TruncateAsync()

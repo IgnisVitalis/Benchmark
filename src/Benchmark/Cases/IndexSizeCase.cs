@@ -6,7 +6,7 @@ class IndexSizeCase : IBenchmarkCase
     public async Task<CaseResult?> RunAsync(BenchmarkContext ctx)
     {
         var size = await ctx.Provider.GetIndexSizeAsync();
-        Console.WriteLine($"  {Number,-2} {Scenario,-45} {size,20}");
+        ctx.Write($"  {Number,-2} {Scenario,-45} {size,20}");
         return null;
     }
 }

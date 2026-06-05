@@ -2,7 +2,7 @@ using System.Data.Common;
 using Npgsql;
 using NpgsqlTypes;
 
-class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
+public class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
 {
     public string Name => "PostgreSQL";
 
@@ -18,8 +18,6 @@ class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
             """);
         await Exec(conn, "DROP DATABASE IF EXISTS \"Benchmark\"");
         await Exec(conn, "CREATE DATABASE \"Benchmark\"");
-
-        Console.WriteLine("Database 'Benchmark' created.\n");
     }
 
     public async Task DropDatabaseAsync()
@@ -33,8 +31,6 @@ class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
             WHERE datname = 'Benchmark' AND pid <> pg_backend_pid()
             """);
         await Exec(conn, "DROP DATABASE \"Benchmark\"");
-
-        Console.WriteLine("\nDatabase 'Benchmark' dropped.");
     }
 
     public async Task SetupTableAsync()
@@ -56,7 +52,6 @@ class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
                 col_short   smallint         NOT NULL
             );
             """);
-        Console.WriteLine("Table ready.\n");
     }
 
     public async Task TruncateAsync()

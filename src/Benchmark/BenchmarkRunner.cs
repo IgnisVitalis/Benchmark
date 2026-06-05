@@ -1,5 +1,7 @@
-class BenchmarkRunner(BenchmarkConfig cfg)
+public class BenchmarkRunner(BenchmarkConfig cfg, Action<string>? write = null)
 {
+    private readonly Action<string> _write = write ?? Console.WriteLine;
+
     private List<IBenchmarkCase> BuildCases() =>
     [
         new BulkInsertCase(cfg),
@@ -14,22 +16,30 @@ class BenchmarkRunner(BenchmarkConfig cfg)
     public async Task RunAsync(IDbProvider provider)
     {
         await provider.CreateDatabaseAsync();
+        _write("Database 'Benchmark' created.");
+        _write("");
+
         await provider.SetupTableAsync();
+        _write("Table ready.");
+        _write("");
 
         PrintHeader();
 
-        Console.WriteLine($"--- {provider.Name} / Guid.NewGuid() ---");
+        _write($"--- {provider.Name} / Guid.NewGuid() ---");
         var baselines = await RunRoundAsync(provider, Guid.NewGuid, null);
 
-        Console.WriteLine($"\n--- {provider.Name} / Guid v7 ---");
+        _write("");
+        _write($"--- {provider.Name} / Guid v7 ---");
         await RunRoundAsync(provider, Guid.CreateVersion7, baselines);
 
+        _write("");
         await provider.DropDatabaseAsync();
+        _write("Database 'Benchmark' dropped.");
     }
 
     private async Task<long[]> RunRoundAsync(IDbProvider provider, Func<Guid> newId, long[]? bl)
     {
-        var ctx      = new BenchmarkContext { Provider = provider, Config = cfg, NewId = newId };
+        var ctx      = new BenchmarkContext { Provider = provider, Config = cfg, NewId = newId, Write = _write };
         var timedRps = new List<long>();
         int blIdx    = 0;
 
@@ -47,19 +57,19 @@ class BenchmarkRunner(BenchmarkConfig cfg)
         return timedRps.ToArray();
     }
 
-    private static void PrintHeader()
+    private void PrintHeader()
     {
-        Console.WriteLine($"  {"#",-2} {"Scenario",-45} {"Ms",8} {"Rows/sec",12}");
-        Console.WriteLine(new string('-', 70));
+        _write($"  {"#",-2} {"Scenario",-45} {"Ms",8} {"Rows/sec",12}");
+        _write(new string('-', 70));
     }
 
-    private static long PrintResult(int num, string scenario, long count, TimeSpan elapsed, long baseline = 0)
+    private long PrintResult(int num, string scenario, long count, TimeSpan elapsed, long baseline = 0)
     {
         long rps = (long)(count / elapsed.TotalSeconds);
         string gain = baseline > 0
             ? $"  {(rps - baseline) * 100.0 / baseline,+6:F1}%"
             : "";
-        Console.WriteLine($"  {num,-2} {scenario,-45} {elapsed.TotalMilliseconds,8:F0} {rps,12:N0}{gain}");
+        _write($"  {num,-2} {scenario,-45} {elapsed.TotalMilliseconds,8:F0} {rps,12:N0}{gain}");
         return rps;
     }
 }

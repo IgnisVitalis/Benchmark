@@ -1,6 +1,6 @@
 using System.Data.Common;
 
-interface IDbProvider : IAsyncDisposable
+public interface IDbProvider : IAsyncDisposable
 {
     string Name { get; }
 

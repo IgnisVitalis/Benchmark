@@ -1,4 +1,4 @@
-record BenchRow(
+public record BenchRow(
     Guid           Id,
     string         ColText,
     string         ColVarchar,
