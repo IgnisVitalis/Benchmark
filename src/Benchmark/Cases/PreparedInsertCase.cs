@@ -9,8 +9,7 @@ class PreparedInsertCase(BenchmarkConfig cfg) : IBenchmarkCase
     {
         var rows = InsertHelpers.PrepareRows(ctx.Config.SingleCount, ctx.NewId);
         await using var conn = await ctx.Provider.OpenConnectionAsync();
-        await using var cmd  = InsertHelpers.BuildInsertCommand(conn, rows[0]);
-        await cmd.PrepareAsync();
+        await using var cmd  = await ctx.Provider.BuildPreparedInsertCommandAsync(conn, rows[0]);
         var elapsed = await BenchmarkContext.MeasureAsync(() => InsertAsync(conn, cmd, rows));
         return new(rows.Length, elapsed);
     }

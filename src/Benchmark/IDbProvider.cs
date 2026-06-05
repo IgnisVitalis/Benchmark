@@ -15,6 +15,9 @@ public interface IDbProvider : IAsyncDisposable
     // Generic ADO.NET connection for portable scenarios (single, prepared, shared, batched)
     Task<DbConnection> OpenConnectionAsync();
 
+    // Builds and prepares an INSERT command; each provider uses its own native parameter types
+    Task<DbCommand> BuildPreparedInsertCommandAsync(DbConnection conn, BenchRow row);
+
     Task<string> GetIndexSizeAsync();
     Task<Guid[]> SampleIdsAsync(int count);
 }

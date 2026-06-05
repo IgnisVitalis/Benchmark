@@ -24,6 +24,6 @@ public class PostgresBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         var connStr = new NpgsqlConnectionStringBuilder(adminConnStr) { Database = "Benchmark" }.ConnectionString;
 
         await using var provider = new PostgresProvider(connStr, adminConnStr);
-        await new BenchmarkRunner(_config, output.WriteLine).RunAsync(provider);
+        await new BenchmarkRunner(_config, new XUnitLogger(output)).RunAsync(provider);
     }
 }

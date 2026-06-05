@@ -63,8 +63,6 @@ public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
 
     public async Task BulkInsertAsync(BenchRow[] rows)
     {
-        var table = BuildDataTable(rows);
-
         await using var conn = new SqlConnection(connStr);
         await conn.OpenAsync();
 
@@ -74,7 +72,7 @@ public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
             BatchSize            = 10_000,
         };
         MapColumns(bulk);
-        await bulk.WriteToServerAsync(table);
+        await bulk.WriteToServerAsync(new BenchRowReader(rows));
     }
 
     public async Task<DbConnection> OpenConnectionAsync()
@@ -84,20 +82,53 @@ public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
         return conn;
     }
 
+    public async Task<DbCommand> BuildPreparedInsertCommandAsync(DbConnection conn, BenchRow row)
+    {
+        var cmd = (SqlCommand)conn.CreateCommand();
+        cmd.CommandText = InsertHelpers.InsertSql;
+        Sp(cmd, "@id",      row.Id,          SqlDbType.UniqueIdentifier);
+        Sp(cmd, "@text",    row.ColText,      SqlDbType.NVarChar,       size: 4000);
+        Sp(cmd, "@varchar", row.ColVarchar,   SqlDbType.NVarChar,       size: 100);
+        Sp(cmd, "@dec",     row.ColDecimal,   SqlDbType.Decimal,        precision: 18, scale: 4);
+        Sp(cmd, "@int",     row.ColInt,       SqlDbType.Int);
+        Sp(cmd, "@lng",     row.ColLong,      SqlDbType.BigInt);
+        Sp(cmd, "@bool",    row.ColBool,      SqlDbType.Bit);
+        Sp(cmd, "@ts",      row.ColTs,        SqlDbType.DateTimeOffset, size: 7, scale: 7);
+        Sp(cmd, "@dbl",     row.ColDouble,    SqlDbType.Float);
+        Sp(cmd, "@short",   row.ColShort,     SqlDbType.SmallInt);
+        await cmd.PrepareAsync();
+        return cmd;
+    }
+
+    private static void Sp(SqlCommand cmd, string name, object value, SqlDbType type,
+                           int size = 0, byte precision = 0, byte scale = 0)
+    {
+        var p = new SqlParameter(name, type);
+        p.Value = value;                            // Value first — must come before Size/Scale
+        if (size      > 0) p.Size      = size;      // then override; Value setter resets these flags
+        if (precision > 0) p.Precision = precision;
+        if (scale     > 0) p.Scale     = scale;
+        cmd.Parameters.Add(p);
+    }
+
     public async Task<string> GetIndexSizeAsync()
     {
         await using var conn = new SqlConnection(connStr);
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
+        // IN_ROW_DATA and ROW_OVERFLOW_DATA use hobt_id; LOB_DATA uses partition_id
         cmd.CommandText = """
             SELECT CAST(ROUND(SUM(a.used_pages) * 8.0 / 1024, 2) AS decimal(10,2))
             FROM sys.tables t
             JOIN sys.indexes i ON t.object_id = i.object_id
             JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
-            JOIN sys.allocation_units a ON p.partition_id = a.container_id
+            JOIN sys.allocation_units a ON
+                (a.type IN (1, 3) AND a.container_id = p.hobt_id) OR
+                (a.type = 2     AND a.container_id = p.partition_id)
             WHERE t.name = 'benchmark_rows' AND i.type > 0
             """;
-        var mb = (decimal)(await cmd.ExecuteScalarAsync())!;
+        var result = await cmd.ExecuteScalarAsync();
+        var mb = result is DBNull or null ? 0m : (decimal)result;
         return $"{mb} MB";
     }
 
@@ -118,27 +149,6 @@ public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private static DataTable BuildDataTable(BenchRow[] rows)
-    {
-        var dt = new DataTable();
-        dt.Columns.Add("id",          typeof(Guid));
-        dt.Columns.Add("col_text",    typeof(string));
-        dt.Columns.Add("col_varchar", typeof(string));
-        dt.Columns.Add("col_decimal", typeof(decimal));
-        dt.Columns.Add("col_int",     typeof(int));
-        dt.Columns.Add("col_long",    typeof(long));
-        dt.Columns.Add("col_bool",    typeof(bool));
-        dt.Columns.Add("col_ts",      typeof(DateTimeOffset));
-        dt.Columns.Add("col_double",  typeof(double));
-        dt.Columns.Add("col_short",   typeof(short));
-
-        foreach (var row in rows)
-            dt.Rows.Add(row.Id, row.ColText, row.ColVarchar, row.ColDecimal,
-                        row.ColInt, row.ColLong, row.ColBool, row.ColTs,
-                        row.ColDouble, row.ColShort);
-        return dt;
-    }
-
     private static void MapColumns(SqlBulkCopy bulk)
     {
         foreach (string col in new[]
@@ -152,5 +162,82 @@ public class MssqlProvider(string connStr, string adminConnStr) : IDbProvider
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    // Streams BenchRow[] to SqlBulkCopy without materialising a DataTable copy
+    private sealed class BenchRowReader(BenchRow[] rows) : IDataReader
+    {
+        private int _pos = -1;
+        private BenchRow Row => rows[_pos];
+
+        public bool Read()          => ++_pos < rows.Length;
+        public bool NextResult()    => false;
+        public void Close()         => _pos = rows.Length;
+        public void Dispose()       { }
+        public bool IsClosed        => _pos >= rows.Length;
+        public int  RecordsAffected => -1;
+        public int  Depth           => 0;
+        public DataTable? GetSchemaTable() => null;
+
+        public int    FieldCount            => 10;
+        public object this[int i]           => GetValue(i);
+        public object this[string name]     => GetValue(GetOrdinal(name));
+
+        public string GetName(int i) => i switch
+        {
+            0 => "id",          1 => "col_text",    2 => "col_varchar",
+            3 => "col_decimal", 4 => "col_int",     5 => "col_long",
+            6 => "col_bool",    7 => "col_ts",      8 => "col_double",
+            9 => "col_short",   _ => throw new IndexOutOfRangeException()
+        };
+
+        public int GetOrdinal(string name) => name switch
+        {
+            "id" => 0,          "col_text" => 1,    "col_varchar" => 2,
+            "col_decimal" => 3, "col_int" => 4,     "col_long" => 5,
+            "col_bool" => 6,    "col_ts" => 7,      "col_double" => 8,
+            "col_short" => 9,   _ => throw new IndexOutOfRangeException()
+        };
+
+        public object GetValue(int i) => i switch
+        {
+            0 => Row.Id,
+            1 => Row.ColText,
+            2 => Row.ColVarchar,
+            3 => Row.ColDecimal,
+            4 => Row.ColInt,
+            5 => Row.ColLong,
+            6 => Row.ColBool,
+            7 => Row.ColTs,
+            8 => Row.ColDouble,
+            9 => Row.ColShort,
+            _ => throw new IndexOutOfRangeException()
+        };
+
+        public int GetValues(object[] values)
+        {
+            var n = Math.Min(values.Length, FieldCount);
+            for (int i = 0; i < n; i++) values[i] = GetValue(i);
+            return n;
+        }
+
+        public bool    IsDBNull(int i)   => false;
+        public bool    GetBoolean(int i) => (bool)GetValue(i);
+        public byte    GetByte(int i)    => (byte)GetValue(i);
+        public char    GetChar(int i)    => (char)GetValue(i);
+        public Guid    GetGuid(int i)    => (Guid)GetValue(i);
+        public short   GetInt16(int i)   => (short)GetValue(i);
+        public int     GetInt32(int i)   => (int)GetValue(i);
+        public long    GetInt64(int i)   => (long)GetValue(i);
+        public float   GetFloat(int i)   => (float)GetValue(i);
+        public double  GetDouble(int i)  => (double)GetValue(i);
+        public decimal GetDecimal(int i) => (decimal)GetValue(i);
+        public string  GetString(int i)  => (string)GetValue(i);
+        public DateTime GetDateTime(int i) => ((DateTimeOffset)GetValue(i)).UtcDateTime;
+        public string  GetDataTypeName(int i) => GetFieldType(i).Name;
+        public Type    GetFieldType(int i)    => GetValue(i).GetType();
+        public IDataReader GetData(int i)     => throw new NotSupportedException();
+        public long GetBytes(int i, long fo, byte[]? b, int bo, int l) => 0;
+        public long GetChars(int i, long fo, char[]? b, int bo, int l) => 0;
     }
 }

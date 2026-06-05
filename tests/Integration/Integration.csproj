@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="appsettings.PostgreSQL.json;appsettings.MsSql.json">
+    <None Update="appsettings.PostgreSQL.json;appsettings.MsSql.json;xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

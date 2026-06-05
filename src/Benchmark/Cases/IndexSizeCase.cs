@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 class IndexSizeCase : IBenchmarkCase
 {
     public int    Number   => 2;
@@ -6,7 +8,7 @@ class IndexSizeCase : IBenchmarkCase
     public async Task<CaseResult?> RunAsync(BenchmarkContext ctx)
     {
         var size = await ctx.Provider.GetIndexSizeAsync();
-        ctx.Write($"  {Number,-2} {Scenario,-45} {size,20}");
+        ctx.Logger.LogInformation("{Line}", $"  {Number,-2} {Scenario,-45} {size,20}");
         return null;
     }
 }

@@ -44,13 +44,13 @@ static class InsertHelpers
     public static void AddInsertParams(DbCommand cmd, BenchRow row, string suffix = "")
     {
         P(cmd, "id"      + suffix, row.Id,         DbType.Guid);
-        P(cmd, "text"    + suffix, row.ColText,     DbType.String);
-        P(cmd, "varchar" + suffix, row.ColVarchar,  DbType.String);
-        P(cmd, "dec"     + suffix, row.ColDecimal,  DbType.Decimal);
+        P(cmd, "text"    + suffix, row.ColText,     DbType.String,  4000);
+        P(cmd, "varchar" + suffix, row.ColVarchar,  DbType.String,  100);
+        P(cmd, "dec"     + suffix, row.ColDecimal,  DbType.Decimal, precision: 18, scale: 4);
         P(cmd, "int"     + suffix, row.ColInt,      DbType.Int32);
         P(cmd, "lng"     + suffix, row.ColLong,     DbType.Int64);
         P(cmd, "bool"    + suffix, row.ColBool,     DbType.Boolean);
-        P(cmd, "ts"      + suffix, row.ColTs,       DbType.DateTimeOffset);
+        P(cmd, "ts"      + suffix, row.ColTs,       DbType.DateTimeOffset, scale: 7);
         P(cmd, "dbl"     + suffix, row.ColDouble,   DbType.Double);
         P(cmd, "short"   + suffix, row.ColShort,    DbType.Int16);
     }
@@ -81,11 +81,15 @@ static class InsertHelpers
         return sb.ToString();
     }
 
-    private static void P(DbCommand cmd, string name, object value, DbType dbType)
+    private static void P(DbCommand cmd, string name, object value, DbType dbType,
+                          int size = 0, byte precision = 0, byte scale = 0)
     {
         var p = cmd.CreateParameter();
         p.ParameterName = "@" + name;
         p.DbType = dbType;
+        if (size      != 0) p.Size      = size;
+        if (precision != 0) p.Precision = precision;
+        if (scale     != 0) p.Scale     = scale;
         p.Value = value;
         cmd.Parameters.Add(p);
     }

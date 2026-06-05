@@ -19,6 +19,7 @@ class PointLookupsCase(BenchmarkConfig cfg) : IBenchmarkCase
         cmd.CommandText = "SELECT id FROM benchmark_rows WHERE id = @id";
         var p = cmd.CreateParameter();
         p.ParameterName = "@id";
+        p.DbType = System.Data.DbType.Guid;
         p.Value = Guid.Empty;
         cmd.Parameters.Add(p);
         await cmd.PrepareAsync();

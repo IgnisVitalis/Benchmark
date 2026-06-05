@@ -1,6 +1,9 @@
-public class BenchmarkRunner(BenchmarkConfig cfg, Action<string>? write = null)
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+public class BenchmarkRunner(BenchmarkConfig cfg, ILogger? logger = null)
 {
-    private readonly Action<string> _write = write ?? Console.WriteLine;
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
     private List<IBenchmarkCase> BuildCases() =>
     [
@@ -16,30 +19,30 @@ public class BenchmarkRunner(BenchmarkConfig cfg, Action<string>? write = null)
     public async Task RunAsync(IDbProvider provider)
     {
         await provider.CreateDatabaseAsync();
-        _write("Database 'Benchmark' created.");
-        _write("");
+        _logger.LogInformation("Database 'Benchmark' created.");
+        _logger.LogInformation("");
 
         await provider.SetupTableAsync();
-        _write("Table ready.");
-        _write("");
+        _logger.LogInformation("Table ready.");
+        _logger.LogInformation("");
 
         PrintHeader();
 
-        _write($"--- {provider.Name} / Guid.NewGuid() ---");
+        _logger.LogInformation("--- {Name} / Guid.NewGuid() ---", provider.Name);
         var baselines = await RunRoundAsync(provider, Guid.NewGuid, null);
 
-        _write("");
-        _write($"--- {provider.Name} / Guid v7 ---");
+        _logger.LogInformation("");
+        _logger.LogInformation("--- {Name} / Guid v7 ---", provider.Name);
         await RunRoundAsync(provider, Guid.CreateVersion7, baselines);
 
-        _write("");
+        _logger.LogInformation("");
         await provider.DropDatabaseAsync();
-        _write("Database 'Benchmark' dropped.");
+        _logger.LogInformation("Database 'Benchmark' dropped.");
     }
 
     private async Task<long[]> RunRoundAsync(IDbProvider provider, Func<Guid> newId, long[]? bl)
     {
-        var ctx      = new BenchmarkContext { Provider = provider, Config = cfg, NewId = newId, Write = _write };
+        var ctx      = new BenchmarkContext { Provider = provider, Config = cfg, NewId = newId, Logger = _logger };
         var timedRps = new List<long>();
         int blIdx    = 0;
 
@@ -59,8 +62,8 @@ public class BenchmarkRunner(BenchmarkConfig cfg, Action<string>? write = null)
 
     private void PrintHeader()
     {
-        _write($"  {"#",-2} {"Scenario",-45} {"Ms",8} {"Rows/sec",12}");
-        _write(new string('-', 70));
+        _logger.LogInformation("{Line}", $"  {"#",-2} {"Scenario",-45} {"Ms",8} {"Rows/sec",12}");
+        _logger.LogInformation("{Line}", new string('-', 70));
     }
 
     private long PrintResult(int num, string scenario, long count, TimeSpan elapsed, long baseline = 0)
@@ -69,7 +72,7 @@ public class BenchmarkRunner(BenchmarkConfig cfg, Action<string>? write = null)
         string gain = baseline > 0
             ? $"  {(rps - baseline) * 100.0 / baseline,+6:F1}%"
             : "";
-        _write($"  {num,-2} {scenario,-45} {elapsed.TotalMilliseconds,8:F0} {rps,12:N0}{gain}");
+        _logger.LogInformation("{Line}", $"  {num,-2} {scenario,-45} {elapsed.TotalMilliseconds,8:F0} {rps,12:N0}{gain}");
         return rps;
     }
 }

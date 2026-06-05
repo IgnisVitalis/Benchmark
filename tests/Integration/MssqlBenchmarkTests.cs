@@ -23,6 +23,6 @@ public class MssqlBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         var connStr = new SqlConnectionStringBuilder(adminConnStr) { InitialCatalog = "Benchmark" }.ConnectionString;
 
         await using var provider = new MssqlProvider(connStr, adminConnStr);
-        await new BenchmarkRunner(_config, output.WriteLine).RunAsync(provider);
+        await new BenchmarkRunner(_config, new XUnitLogger(output)).RunAsync(provider);
     }
 }

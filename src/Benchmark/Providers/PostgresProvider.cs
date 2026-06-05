@@ -94,6 +94,13 @@ public class PostgresProvider(string connStr, string adminConnStr) : IDbProvider
         return conn;
     }
 
+    public async Task<DbCommand> BuildPreparedInsertCommandAsync(DbConnection conn, BenchRow row)
+    {
+        var cmd = InsertHelpers.BuildInsertCommand(conn, row);
+        await cmd.PrepareAsync();
+        return cmd;
+    }
+
     public async Task<string> GetIndexSizeAsync()
     {
         await using var conn = new NpgsqlConnection(connStr);
