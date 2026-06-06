@@ -9,8 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration", "tests\Integr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
+<<<<<<< Updated upstream
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.Core", "src\Benchmark.Core\Benchmark.Core.csproj", "{BA6BCC57-B69D-42D3-A88E-18D164BF7441}"
 EndProject
+=======
+>>>>>>> Stashed changes
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.Cli", "src\Benchmark.Cli\Benchmark.Cli.csproj", "{1AEE6C8B-18B9-45E1-9CC0-F15DA30B4BEB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UseCases", "UseCases", "{9AEAE08B-E4E0-CEA6-BE97-015782B0B2FE}"
@@ -19,10 +22,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.UseCases.Database
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.UseCases.Database.Postgres", "src\UseCases\Benchmark.UseCases.Database.Postgres\Benchmark.UseCases.Database.Postgres.csproj", "{03763B30-4AF7-480D-A411-5901B75BC8BC}"
 EndProject
+<<<<<<< Updated upstream
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.UseCases.Database.Mssql", "src\UseCases\Benchmark.UseCases.Database.Mssql\Benchmark.UseCases.Database.Mssql.csproj", "{189278F7-35B5-4C7A-9D45-7C7EB93FC315}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark.UnitTests", "tests\Benchmark.UnitTests\Benchmark.UnitTests.csproj", "{5A4DD391-B8C5-4CA4-889F-070D33FE6A73}"
 EndProject
+=======
+>>>>>>> Stashed changes
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +51,7 @@ Global
 		{0D6F0068-80DE-477C-80E7-51B4E73CB156}.Release|x64.Build.0 = Release|Any CPU
 		{0D6F0068-80DE-477C-80E7-51B4E73CB156}.Release|x86.ActiveCfg = Release|Any CPU
 		{0D6F0068-80DE-477C-80E7-51B4E73CB156}.Release|x86.Build.0 = Release|Any CPU
+<<<<<<< Updated upstream
 		{BA6BCC57-B69D-42D3-A88E-18D164BF7441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BA6BCC57-B69D-42D3-A88E-18D164BF7441}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA6BCC57-B69D-42D3-A88E-18D164BF7441}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -69,6 +76,8 @@ Global
 		{1AEE6C8B-18B9-45E1-9CC0-F15DA30B4BEB}.Release|x64.Build.0 = Release|Any CPU
 		{1AEE6C8B-18B9-45E1-9CC0-F15DA30B4BEB}.Release|x86.ActiveCfg = Release|Any CPU
 		{1AEE6C8B-18B9-45E1-9CC0-F15DA30B4BEB}.Release|x86.Build.0 = Release|Any CPU
+=======
+>>>>>>> Stashed changes
 		{B1D47C61-6FCB-400F-8B9E-161EED86B761}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B1D47C61-6FCB-400F-8B9E-161EED86B761}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1D47C61-6FCB-400F-8B9E-161EED86B761}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -93,6 +102,7 @@ Global
 		{03763B30-4AF7-480D-A411-5901B75BC8BC}.Release|x64.Build.0 = Release|Any CPU
 		{03763B30-4AF7-480D-A411-5901B75BC8BC}.Release|x86.ActiveCfg = Release|Any CPU
 		{03763B30-4AF7-480D-A411-5901B75BC8BC}.Release|x86.Build.0 = Release|Any CPU
+<<<<<<< Updated upstream
 		{189278F7-35B5-4C7A-9D45-7C7EB93FC315}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{189278F7-35B5-4C7A-9D45-7C7EB93FC315}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{189278F7-35B5-4C7A-9D45-7C7EB93FC315}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -117,18 +127,26 @@ Global
 		{5A4DD391-B8C5-4CA4-889F-070D33FE6A73}.Release|x64.Build.0 = Release|Any CPU
 		{5A4DD391-B8C5-4CA4-889F-070D33FE6A73}.Release|x86.ActiveCfg = Release|Any CPU
 		{5A4DD391-B8C5-4CA4-889F-070D33FE6A73}.Release|x86.Build.0 = Release|Any CPU
+=======
+>>>>>>> Stashed changes
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0D6F0068-80DE-477C-80E7-51B4E73CB156} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+<<<<<<< Updated upstream
 		{BA6BCC57-B69D-42D3-A88E-18D164BF7441} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+=======
+>>>>>>> Stashed changes
 		{1AEE6C8B-18B9-45E1-9CC0-F15DA30B4BEB} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{9AEAE08B-E4E0-CEA6-BE97-015782B0B2FE} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{B1D47C61-6FCB-400F-8B9E-161EED86B761} = {9AEAE08B-E4E0-CEA6-BE97-015782B0B2FE}
 		{03763B30-4AF7-480D-A411-5901B75BC8BC} = {9AEAE08B-E4E0-CEA6-BE97-015782B0B2FE}
+<<<<<<< Updated upstream
 		{189278F7-35B5-4C7A-9D45-7C7EB93FC315} = {9AEAE08B-E4E0-CEA6-BE97-015782B0B2FE}
 		{5A4DD391-B8C5-4CA4-889F-070D33FE6A73} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+=======
+>>>>>>> Stashed changes
 	EndGlobalSection
 EndGlobal

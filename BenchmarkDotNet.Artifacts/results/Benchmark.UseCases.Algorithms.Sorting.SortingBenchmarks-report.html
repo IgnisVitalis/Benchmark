@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Benchmark.UseCases.Algorithms.Sorting.SortingBenchmarks-20260605-182743</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Windows 11 (10.0.22000.2538/21H2/SunValley)
+Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.312
+  [Host]   : .NET 9.0.14 (9.0.1426.11910), X64 RyuJIT AVX2
+  ShortRun : .NET 9.0.14 (9.0.1426.11910), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Job=ShortRun  IterationCount=3  LaunchCount=1  
+WarmupCount=3  
+</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>N</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Ratio</th><th>RatioSD</th><th>Gen0</th><th>Gen1</th><th>Gen2</th><th>Allocated</th><th>Alloc Ratio</th>
+</tr>
+</thead><tbody><tr><td>ArraySort</td><td>10000</td><td>375.4 &mu;s</td><td>308.79 &mu;s</td><td>16.93 &mu;s</td><td>1.00</td><td>0.05</td><td>5.8594</td><td>-</td><td>-</td><td>39.09 KB</td><td>1.00</td>
+</tr><tr><td>QuickSort</td><td>10000</td><td>421.0 &mu;s</td><td>39.84 &mu;s</td><td>2.18 &mu;s</td><td>1.12</td><td>0.04</td><td>5.8594</td><td>-</td><td>-</td><td>39.09 KB</td><td>1.00</td>
+</tr><tr><td>ArraySort</td><td>100000</td><td>4,597.9 &mu;s</td><td>77.14 &mu;s</td><td>4.23 &mu;s</td><td>1.00</td><td>0.00</td><td>117.1875</td><td>117.1875</td><td>117.1875</td><td>390.69 KB</td><td>1.00</td>
+</tr><tr><td>QuickSort</td><td>100000</td><td>5,376.0 &mu;s</td><td>513.81 &mu;s</td><td>28.16 &mu;s</td><td>1.17</td><td>0.01</td><td>117.1875</td><td>117.1875</td><td>117.1875</td><td>390.69 KB</td><td>1.00</td>
+</tr></tbody></table>
+</body>
+</html>

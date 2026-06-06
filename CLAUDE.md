@@ -7,8 +7,13 @@ vocabulary, and the recipes — read it first. This file only adds Claude-/Windo
 
 `Benchmark.Core` and `Benchmark.UseCases.Database.Abstractions` reference **only `System.*` (the BCL)**.
 **Never** add a NuGet `PackageReference` to either. Domain dependencies (Npgsql, Microsoft.Data.SqlClient,
-BenchmarkDotNet, …) go **only** in the leaf use-case / engine projects. `tests/Integration/ArchitectureTests.cs`
+BenchmarkDotNet, …) go **only** in the leaf use-case / engine projects. `tests/Benchmark.UnitTests/ArchitectureTests.cs`
 fails if you break this — run it after touching project references.
+
+## Committing is the user's job
+
+**Do not `git commit`, amend, or push.** Leave all changes in the working tree for the user to review and
+commit themselves. Only run git write operations if the user explicitly asks for them in that request.
 
 ## Environment
 

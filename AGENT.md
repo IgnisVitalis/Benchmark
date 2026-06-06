@@ -51,8 +51,8 @@ belong **only** in the leaf use-case / engine projects that need them. This is w
 tech-agnostic: a consumer of the Postgres use case never drags in the SQL Server driver, and the Core
 never drags in anything.
 
-This invariant is enforced by `tests/Integration/ArchitectureTests.cs` (runs without Docker). If you
-break it, that test fails.
+This invariant is enforced by `tests/Benchmark.UnitTests/ArchitectureTests.cs` (runs without Docker). If
+you break it, that test fails.
 
 ---
 
@@ -194,6 +194,8 @@ chain (not each step) is repeated, so stateful steps always start from the same 
 ## 8. Conventions
 
 - **Never** add a third-party `PackageReference` to `Benchmark.Core` or `…Database.Abstractions` (see §3).
+- **Committing is the user's responsibility** — don't `git commit`, amend, or push; leave changes in the
+  working tree for the user to review. Only run git write operations if explicitly asked.
 - One use case ⇒ one stable, lowercase, dotted `Id` (`category.engine.thing`) ⇒ one `Results/<id>.md` ⇒ one README catalog row.
 - Steps stay portable: talk to `IDbProvider` + generic `System.Data.Common`, not a concrete driver.
 - Keep `StepResult.Value` the comparable figure; set `IsLowerBetter` for size/latency metrics.
