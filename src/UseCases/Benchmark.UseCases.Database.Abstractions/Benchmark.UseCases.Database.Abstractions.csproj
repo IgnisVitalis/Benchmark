@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DB-domain shared layer (IDbProvider, steps, DbInsertUseCase). Dependency-free: System.Data.Common
+       ships in the framework. Concrete drivers live in the leaf projects that reference this one. -->
+  <PropertyGroup>
+    <RootNamespace>Benchmark.UseCases.Database</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Benchmark.Core\Benchmark.Core.csproj" />
+  </ItemGroup>
+
+</Project>

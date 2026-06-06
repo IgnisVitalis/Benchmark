@@ -1,0 +1,46 @@
+name: Benchmarks
+
+# Runs the actual DB benchmark and the regression gate. Manual or weekly — NOT on every PR, because
+# shared CI runners have variable performance. For a hard gate, run on dedicated/consistent hardware.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+
+jobs:
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: root        # matches appsettings.ci.json (postgres / root)
+        ports: [ '5432:5432' ]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # Writes Results/<id>.md + .json, then compares to Results/baseline/<id>.json (if committed)
+      # and exits non-zero on a regression beyond the threshold. The generous threshold absorbs
+      # runner-to-runner variance; tighten it on dedicated hardware.
+      - name: Run Postgres benchmark + regression gate
+        run: >
+          dotnet run --project src/Benchmark.Cli -c Release --
+          run database.postgres.uuid-insert
+          --config appsettings.ci.json
+          --gate --threshold 25
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: Results/**

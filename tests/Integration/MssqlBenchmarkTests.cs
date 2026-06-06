@@ -1,3 +1,6 @@
+using Benchmark.Core;
+using Benchmark.UseCases.Database;
+using Benchmark.UseCases.Database.Mssql;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Testcontainers.MsSql;
@@ -8,10 +11,10 @@ public class MssqlBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
     private readonly MsSqlContainer _container = new MsSqlBuilder()
         .Build();
 
-    private readonly BenchmarkConfig _config = new ConfigurationBuilder()
+    private readonly DatabaseConfig _config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.MsSql.json")
         .Build()
-        .Get<BenchmarkConfig>() ?? new BenchmarkConfig();
+        .Get<DatabaseConfig>() ?? new DatabaseConfig();
 
     public Task InitializeAsync() => _container.StartAsync();
     public Task DisposeAsync()    => _container.DisposeAsync().AsTask();
@@ -22,7 +25,16 @@ public class MssqlBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         var adminConnStr = _container.GetConnectionString();
         var connStr = new SqlConnectionStringBuilder(adminConnStr) { InitialCatalog = "Benchmark" }.ConnectionString;
 
-        await using var provider = new MssqlProvider(connStr, adminConnStr);
-        await new BenchmarkRunner(_config, new XUnitLogger(output)).RunAsync(provider);
+        var useCase = new MssqlUuidInsertUseCase(_config, connStr, adminConnStr);
+        var report  = await useCase.RunAsync(new HostContext(new DelegateRunLog(output.WriteLine), iterations: 3, warmup: 1));
+
+        Assert.Equal(2, report.Variants.Count);
+        Assert.NotEmpty(report.Rows);
+        Assert.All(report.Rows, r => Assert.Equal(3, r.Cells[0]!.Samples));   // 3 measured iterations aggregated
+
+        // Write the real report into the repo Results/ folder (Markdown + JSON, like the CLI).
+        var path = await MarkdownReporter.WriteAsync(report, TestPaths.ResultsDir());
+        await JsonReporter.WriteAsync(report, TestPaths.ResultsDir());
+        output.WriteLine($"Report: {path}");
     }
 }

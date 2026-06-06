@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- MSSQL use case: the ONLY place Microsoft.Data.SqlClient is referenced. -->
+  <PropertyGroup>
+    <RootNamespace>Benchmark.UseCases.Database.Mssql</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Benchmark.UseCases.Database.Abstractions\Benchmark.UseCases.Database.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

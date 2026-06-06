@@ -1,3 +1,6 @@
+using Benchmark.Core;
+using Benchmark.UseCases.Database;
+using Benchmark.UseCases.Database.Postgres;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -9,10 +12,10 @@ public class PostgresBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         .WithImage("postgres:17-alpine")
         .Build();
 
-    private readonly BenchmarkConfig _config = new ConfigurationBuilder()
+    private readonly DatabaseConfig _config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.PostgreSQL.json")
         .Build()
-        .Get<BenchmarkConfig>() ?? new BenchmarkConfig();
+        .Get<DatabaseConfig>() ?? new DatabaseConfig();
 
     public Task InitializeAsync() => _container.StartAsync();
     public Task DisposeAsync()    => _container.DisposeAsync().AsTask();
@@ -23,7 +26,16 @@ public class PostgresBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         var adminConnStr = _container.GetConnectionString();
         var connStr = new NpgsqlConnectionStringBuilder(adminConnStr) { Database = "Benchmark" }.ConnectionString;
 
-        await using var provider = new PostgresProvider(connStr, adminConnStr);
-        await new BenchmarkRunner(_config, new XUnitLogger(output)).RunAsync(provider);
+        var useCase = new PostgresUuidInsertUseCase(_config, connStr, adminConnStr);
+        var report  = await useCase.RunAsync(new HostContext(new DelegateRunLog(output.WriteLine), iterations: 3, warmup: 1));
+
+        Assert.Equal(2, report.Variants.Count);     // Guid.NewGuid() + Guid v7
+        Assert.NotEmpty(report.Rows);
+        Assert.All(report.Rows, r => Assert.Equal(3, r.Cells[0]!.Samples));   // 3 measured iterations aggregated
+
+        // Write the real report into the repo Results/ folder (Markdown + JSON, like the CLI).
+        var path = await MarkdownReporter.WriteAsync(report, TestPaths.ResultsDir());
+        await JsonReporter.WriteAsync(report, TestPaths.ResultsDir());
+        output.WriteLine($"Report: {path}");
     }
 }

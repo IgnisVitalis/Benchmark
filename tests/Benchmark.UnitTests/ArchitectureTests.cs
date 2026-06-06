@@ -1,0 +1,39 @@
+using System.Reflection;
+using Benchmark.Core;
+using Benchmark.UseCases.Database;
+
+/// <summary>
+/// Guards the framework's central invariant: the Core (and the DB abstraction layer) stay free of any
+/// third-party technology. Pure reflection — no Docker.
+/// </summary>
+public class ArchitectureTests
+{
+    [Fact]
+    public void Core_depends_only_on_the_bcl()
+    {
+        var offenders = NonBclReferences(typeof(IUseCase).Assembly);
+        Assert.True(offenders.Count == 0,
+            "Benchmark.Core must reference only System.* assemblies. Offenders: " + string.Join(", ", offenders));
+    }
+
+    [Fact]
+    public void Database_abstractions_have_no_driver_dependency()
+    {
+        var refs = typeof(IDbProvider).Assembly
+            .GetReferencedAssemblies()
+            .Select(a => a.Name)
+            .ToList();
+
+        Assert.DoesNotContain("Npgsql", refs);
+        Assert.DoesNotContain("Microsoft.Data.SqlClient", refs);
+        Assert.DoesNotContain("BenchmarkDotNet", refs);
+    }
+
+    private static List<string> NonBclReferences(Assembly asm) =>
+        asm.GetReferencedAssemblies()
+           .Select(a => a.Name!)
+           .Where(n => !n.StartsWith("System", StringComparison.Ordinal)
+                    && n != "netstandard"
+                    && n != "mscorlib")
+           .ToList();
+}

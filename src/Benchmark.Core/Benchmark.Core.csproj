@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Benchmark.Core — the dependency-free heart of the framework.
+    HARD RULE: reference ONLY System.* (BCL). Never add a NuGet PackageReference here; domain
+    dependencies belong in the leaf use-case / engine projects. Enforced by ArchitectureTests.
+    Common settings (TFM, nullable, implicit usings) come from Directory.Build.props.
+  -->
+
+</Project>

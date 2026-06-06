@@ -6,5 +6,6 @@ TestResults/
 .vs/
 artifacts/
 .testresults/
+BenchmarkDotNet.Artifacts/
 
 !packages/

@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- Settings shared by every project in the repo. A csproj only declares what is unique to it
+       (RootNamespace, OutputType, package references, project references). -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

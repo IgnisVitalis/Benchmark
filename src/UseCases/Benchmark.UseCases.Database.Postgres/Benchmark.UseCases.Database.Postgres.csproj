@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PostgreSQL use case: the ONLY place Npgsql is referenced. -->
+  <PropertyGroup>
+    <RootNamespace>Benchmark.UseCases.Database.Postgres</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Benchmark.UseCases.Database.Abstractions\Benchmark.UseCases.Database.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

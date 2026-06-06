@@ -1,0 +1,228 @@
+{
+  "Metadata": {
+    "Id": "database.postgres.uuid-insert",
+    "Title": "PostgreSQL \u2014 UUID insert \u0026 read patterns",
+    "Category": "Database",
+    "Engine": "Stopwatch",
+    "Description": "Random Guid.NewGuid() vs time-ordered Guid v7 across bulk, single, prepared, shared-transaction and batched inserts, plus index size and point lookups on a fresh table. Shows how key ordering affects B-tree page splits.",
+    "ResultsFile": "Results/database.postgres.uuid-insert.md"
+  },
+  "Environment": {
+    "TimestampUtc": "2026-06-05T16:43:46.0582668+00:00",
+    "Machine": "IV-PC",
+    "Os": "Microsoft Windows 10.0.22000",
+    "Runtime": ".NET 9.0.14",
+    "ProcessorCount": 8
+  },
+  "Variants": [
+    "Guid.NewGuid()",
+    "Guid v7"
+  ],
+  "Rows": [
+    {
+      "Step": "Bulk insert 200,000 rows",
+      "Cells": [
+        {
+          "Unit": "rows/sec",
+          "Median": 263969.2528614267,
+          "Mean": 276385.4536498811,
+          "StdDev": 34940.930778191505,
+          "Min": 249348.29705710412,
+          "Max": 315838.8110311127,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.7576640",
+          "Cv": 0.1264210193292368
+        },
+        {
+          "Unit": "rows/sec",
+          "Median": 345221.6746047514,
+          "Mean": 343695.42700109846,
+          "StdDev": 3604.310693144979,
+          "Min": 339579.09849899245,
+          "Max": 346285.5078995516,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.5793379",
+          "Cv": 0.01048693235343355
+        }
+      ]
+    },
+    {
+      "Step": "Index size after bulk insert",
+      "Cells": [
+        {
+          "Unit": "MB",
+          "Median": 8.3671875,
+          "Mean": 8.364583333333334,
+          "StdDev": 0.17579571699726743,
+          "Min": 8.1875,
+          "Max": 8.5390625,
+          "Samples": 3,
+          "IsLowerBetter": true,
+          "MedianElapsed": null,
+          "Cv": 0.02101667351399461
+        },
+        {
+          "Unit": "MB",
+          "Median": 7.9765625,
+          "Mean": 8.041666666666666,
+          "StdDev": 0.11959335940838578,
+          "Min": 7.96875,
+          "Max": 8.1796875,
+          "Samples": 3,
+          "IsLowerBetter": true,
+          "MedianElapsed": null,
+          "Cv": 0.014871713087053155
+        }
+      ]
+    },
+    {
+      "Step": "1,000 point lookups",
+      "Cells": [
+        {
+          "Unit": "lookups/sec",
+          "Median": 1725.3031055628433,
+          "Mean": 1734.906171844853,
+          "StdDev": 233.49600635764628,
+          "Min": 1506.3598512921556,
+          "Max": 1973.0555586795601,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.5796083",
+          "Cv": 0.13458710917452837
+        },
+        {
+          "Unit": "lookups/sec",
+          "Median": 2061.777875185328,
+          "Mean": 1982.5971424384607,
+          "StdDev": 239.61797551869466,
+          "Min": 1713.4102106226635,
+          "Max": 2172.603341507391,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.4850183",
+          "Cv": 0.12086064808102201
+        }
+      ]
+    },
+    {
+      "Step": "\u002B100 rows, 1 tx/row",
+      "Cells": [
+        {
+          "Unit": "rows/sec",
+          "Median": 894.2920024360515,
+          "Mean": 812.0392403238038,
+          "StdDev": 233.52655333424056,
+          "Min": 548.5156617676904,
+          "Max": 993.3100567676697,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.1118203",
+          "Cv": 0.2875803800332616
+        },
+        {
+          "Unit": "rows/sec",
+          "Median": 829.555399783486,
+          "Mean": 866.1504323297245,
+          "StdDev": 138.69444503441125,
+          "Min": 749.4229443328637,
+          "Max": 1019.4729528728238,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.1205465",
+          "Cv": 0.16012743266935564
+        }
+      ]
+    },
+    {
+      "Step": "\u002B100 rows, prepared, 1 tx/row",
+      "Cells": [
+        {
+          "Unit": "rows/sec",
+          "Median": 987.9597347130521,
+          "Mean": 1005.3957108796039,
+          "StdDev": 40.039206899987306,
+          "Min": 977.0309787212424,
+          "Max": 1051.1964192045177,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.1012187",
+          "Cv": 0.039824326349032935
+        },
+        {
+          "Unit": "rows/sec",
+          "Median": 953.7670938907403,
+          "Mean": 950.6298524319428,
+          "StdDev": 104.16453140447271,
+          "Min": 844.932139275234,
+          "Max": 1053.1903241298542,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.1048474",
+          "Cv": 0.10957422716948606
+        }
+      ]
+    },
+    {
+      "Step": "\u002B100 rows, 1 tx total",
+      "Cells": [
+        {
+          "Unit": "rows/sec",
+          "Median": 1720.5070678430347,
+          "Mean": 1739.6906807790044,
+          "StdDev": 148.57418630638725,
+          "Min": 1601.640079441348,
+          "Max": 1896.9248950526303,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.0581224",
+          "Cv": 0.0854026453943285
+        },
+        {
+          "Unit": "rows/sec",
+          "Median": 1798.8976355289478,
+          "Mean": 1788.0499498070324,
+          "StdDev": 134.92336549945884,
+          "Min": 1648.0301919131157,
+          "Max": 1917.2220219790333,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.0555896",
+          "Cv": 0.07545838723018888
+        }
+      ]
+    },
+    {
+      "Step": "\u002B100 rows, batched VALUES",
+      "Cells": [
+        {
+          "Unit": "rows/sec",
+          "Median": 22641.33855593543,
+          "Mean": 21234.499353827287,
+          "StdDev": 5520.506182663498,
+          "Min": 15146.695748322505,
+          "Max": 25915.463757223933,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.0044167",
+          "Cv": 0.25997816528075984
+        },
+        {
+          "Unit": "rows/sec",
+          "Median": 32542.54938331869,
+          "Mean": 31937.776692300202,
+          "StdDev": 2789.119033525601,
+          "Min": 28895.888115121215,
+          "Max": 34374.89257846069,
+          "Samples": 3,
+          "IsLowerBetter": false,
+          "MedianElapsed": "00:00:00.0030729",
+          "Cv": 0.08732978066685596
+        }
+      ]
+    }
+  ],
+  "Warmup": 1,
+  "Iterations": 3
+}

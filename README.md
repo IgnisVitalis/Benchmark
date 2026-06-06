@@ -1,102 +1,96 @@
-# SQLBenchmark
+# Benchmark — a tech-agnostic performance-estimation framework
 
-A .NET 9 console tool for benchmarking SQL databases across common insert and read patterns. Primary goals:
+Define a **use case** — a database pattern, or anything else measurable — in its own project that pulls
+in **only** the dependencies that use case needs. The framework runs it (optionally comparing variants),
+prints a live table, and emits a Markdown report into [`Results/`](Results). The core carries **zero
+third-party dependencies**.
 
-- **Learning** — understand how database internals (B-tree structure, transaction overhead, bulk protocols) affect real throughput numbers
-- **Pre-production validation** — run the suite against a target database before going live to catch performance regressions or misconfiguration early
+- **Learning** — see how internals (B-tree page splits, transaction overhead, cache) move real numbers.
+- **Pre-production validation** — run a suite against a target before go-live to catch regressions early.
 
----
-
-## What it tests
-
-Each run executes two rounds against a fresh 10 million-row table — one with `Guid.NewGuid()` (random UUIDs) and one with Guid v7 (time-ordered UUIDs). The v7 round shows the gain percentage relative to the baseline.
-
-| # | Scenario | Description |
-|---|----------|-------------|
-| 1 | Bulk insert N rows | Provider-native bulk protocol (COPY for PostgreSQL, SqlBulkCopy for MSSQL) |
-| 2 | Index size | B-tree size after bulk insert — shows page fragmentation caused by random vs ordered keys |
-| 3 | Point lookups | 1 000 prepared SELECT by primary key on a populated table |
-| 4 | +100 rows, 1 tx/row | One transaction and one round-trip per row — baseline for single inserts |
-| 5 | +100 rows, prepared, 1 tx/row | Reuses a prepared statement; eliminates parse/plan overhead per row |
-| 6 | +100 rows, 1 tx total | All rows in a single transaction — removes per-row fsync |
-| 7 | +100 rows, batched VALUES | Single INSERT with all rows in one VALUES clause and one round-trip |
+> New here? Read **[AGENT.md](AGENT.md)** for the architecture, vocabulary, and step-by-step recipes.
 
 ---
 
-## Architecture
+## Quickstart
 
-```
-BenchmarkRunner
-│  owns List<IBenchmarkCase>  (BuildCases)
-│  orchestrates two rounds (NewGuid → Guid v7)
-│
-├── IBenchmarkCase          one class per test scenario
-│     RunAsync(BenchmarkContext) → CaseResult?
-│     null return = info-only (case prints its own line)
-│
-├── BenchmarkContext        shared state threaded through all cases
-│     Provider, Config, NewId, SampledIds
-│
-└── IDbProvider             one class per database engine
-      BulkInsertAsync       provider-specific bulk path
-      OpenConnectionAsync   generic ADO.NET connection for portable cases
-      GetIndexSizeAsync / SampleIdsAsync / DDL helpers
+```bash
+dotnet build Benchmark.sln -c Release
+
+# from the repo root (so ./appsettings.json and ./Results resolve):
+dotnet run --project src/Benchmark.Cli -c Release -- list
+dotnet run --project src/Benchmark.Cli -c Release -- run database.postgres.uuid-insert
 ```
 
-**Adding a new test case** — create a class in `Cases/`, implement `IBenchmarkCase`, register it in `BenchmarkRunner.BuildCases()`.
-
-**Adding a new database** — implement `IDbProvider` in `Providers/`, enable it in `appsettings.json`.
+Each `run` writes `Results/<use-case-id>.md`. Configuration (row counts, DB connection strings, which
+providers are enabled) lives in [`appsettings.json`](appsettings.json) under a per-domain section.
 
 ---
 
-## Configuration
+## Use-case catalog
 
-`appsettings.json` controls row counts and which providers are active:
+Each use case maps 1:1 to one generated report. Add a row here when you add a use case.
 
-```json
-{
-  "BulkCount":   10000000,
-  "SingleCount": 100,
-  "LookupCount": 1000,
-  "Providers": [
-    { "Type": "PostgreSQL", "Enabled": true,  "ConnStr": "...", "AdminConnStr": "..." },
-    { "Type": "MSSQL",      "Enabled": false, "ConnStr": "...", "AdminConnStr": "..." }
-  ]
-}
+| Use case (`id`) | Category | Engine | What it measures | Result |
+|---|---|---|---|---|
+| `database.postgres.uuid-insert` | Database | Stopwatch | Random `Guid.NewGuid()` vs time-ordered `Guid v7` across bulk / single / prepared / shared-tx / batched inserts, index size and point lookups on a fresh table. | [report](Results/database.postgres.uuid-insert.md) |
+| `database.mssql.uuid-insert` | Database | Stopwatch | The same suite against SQL Server (SqlBulkCopy, clustered-index splits). | [report](Results/database.mssql.uuid-insert.md) |
+
+---
+
+## Architecture (in one breath)
+
+A **use case** is an ordered **chain of steps** that share a `UseCaseContext`; an earlier step can hand
+state to a later one (bulk-insert populates the table, point-lookups reads it). The chain is re-run once
+per **variant** (e.g. two UUID schemes), and every step reports its gain versus the baseline variant.
+Steps are timed by an **engine** — currently the BCL `Stopwatch` harness. The model is engine-agnostic:
+the engine's output normalises into one `UseCaseReport`, so additional engines can be added later without
+touching the reporter.
+
+```
+Benchmark.Cli ──> UseCaseRegistry ──> IUseCase.RunAsync(HostContext)
+                                          │
+                ChainedUseCase ──> ChainRunner (steps × variants, live console)
+                                          │
+                                   UseCaseReport ──> MarkdownReporter ──> Results/<id>.md
+```
+
+The keystone: **`Benchmark.Core` depends only on the BCL.** Drivers (`Npgsql`, `Microsoft.Data.SqlClient`)
+live only in the leaf use-case projects. A guard test enforces it.
+
+---
+
+## Project layout
+
+```
+src/
+  Benchmark.Core/                                # dependency-free core (abstractions, runner, reporters)
+  Benchmark.Cli/                                 # console host  (list | run …)
+  UseCases/
+    Benchmark.UseCases.Database.Abstractions/    # IDbProvider, the 7 steps, DbInsertUseCase  (dep-free)
+    Benchmark.UseCases.Database.Postgres/        # Npgsql
+    Benchmark.UseCases.Database.Mssql/           # Microsoft.Data.SqlClient
+tests/Integration/                               # Testcontainers DB runs + architecture guards
+Results/                                         # generated <id>.md  (+ _TEMPLATE.md)
+appsettings.json   AGENT.md   CLAUDE.md
 ```
 
 ---
 
-## Results
+## Adding a use case
 
-### PostgreSQL 17 — localhost — 2025-05-26
+Full recipes (add a step, a DB engine, or a brand-new domain) are in **[AGENT.md §6](AGENT.md)**. In short:
 
-```
-  #  Scenario                                            Ms     Rows/sec
-----------------------------------------------------------------------
---- PostgreSQL / Guid.NewGuid() ---
-  1  Bulk insert 10,000,000 rows                     140151       71,351
-  2  Index size after bulk insert                               382 MB
-  3  1,000 point lookups                                177        5,658
-  4  +100 rows, 1 tx/row                                 57        1,752
-  5  +100 rows, prepared, 1 tx/row                       51        1,968
-  6  +100 rows, 1 tx total                               26        3,859
-  7  +100 rows, batched VALUES                           11        8,979
+1. Create a project that references `Benchmark.Core` (and only the deps your use case truly needs).
+2. Implement steps (`IBenchmarkStep`) and a use case (`ChainedUseCase`).
+3. Reference it from `Benchmark.Cli.csproj`, register it in `Program.cs`, add it to the solution and the
+   catalog table above.
 
---- PostgreSQL / Guid v7 ---
-  1  Bulk insert 10,000,000 rows                      33430      299,133   +319.2%
-  2  Index size after bulk insert                               394 MB
-  3  1,000 point lookups                                119        8,394    +48.4%
-  4  +100 rows, 1 tx/row                                 45        2,213    +26.3%
-  5  +100 rows, prepared, 1 tx/row                       36        2,774    +41.0%
-  6  +100 rows, 1 tx total                               23        4,297    +11.4%
-  7  +100 rows, batched VALUES                            5       19,456   +116.7%
-```
+---
 
-#### Key observations
+## Results convention
 
-- **Bulk insert (+319%)** — the largest win. Random UUIDs cause constant B-tree page splits as the index must reorder every incoming key. Time-ordered keys always append to the rightmost leaf, making splits rare.
-- **Index size** — Guid v7 produces a *larger* index (394 MB vs 382 MB) despite being faster. Random inserts leave partially-filled pages after splits; ordered inserts pack pages more densely but the table itself is larger because fewer pages are reused.
-- **Batched VALUES (+117%)** — the second-largest gain. With random UUIDs the single-statement insert still triggers many index rebalances; with v7 the tree barely changes shape.
-- **Point lookups (+48%)** — v7 keys cluster related rows on the same index pages, improving cache hit rate even for random-access patterns after a warm-up period.
-- **Shared tx vs 1 tx/row (+11%)** — the smallest relative gain because the dominant cost here is fsync per transaction, which is the same regardless of key order.
+- One use case ⇒ one `Results/<id>.md` **and** `Results/<id>.json`, regenerated on each run (see [`Results/_TEMPLATE.md`](Results/_TEMPLATE.md)).
+- Values are the **median ± CV%** over N measured iterations (after warm-up); the report embeds the environment for reproducibility.
+- **Regression gate:** `baseline <id>` snapshots a reference, then `run <id> --gate` (or `compare <id>`) exits non-zero if a metric regresses beyond a threshold — see [AGENT.md](AGENT.md).
+- Link every result from the catalog table. Don't hand-edit generated numbers — re-run instead.
