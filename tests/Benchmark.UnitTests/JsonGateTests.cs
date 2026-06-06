@@ -20,7 +20,7 @@ public class JsonGateTests
         Warmup: 1, Iterations: 3);
 
     [Fact]
-    public void Json_round_trips_the_nested_report_model()
+    public void JsonReporter_RoundTrip_PreservesReportModel()
     {
         var report = Sample(1000);
 
@@ -35,7 +35,7 @@ public class JsonGateTests
     }
 
     [Fact]
-    public void Gate_flags_a_throughput_drop_beyond_threshold()
+    public void Compare_ThroughputDropBeyondThreshold_FlagsRegression()
     {
         var result = RegressionGate.Compare(Sample(800), Sample(1000), thresholdPct: 10);   // -20%
 
@@ -44,7 +44,7 @@ public class JsonGateTests
     }
 
     [Fact]
-    public void Gate_passes_within_threshold()
+    public void Compare_ChangeWithinThreshold_ReportsNoRegression()
     {
         var result = RegressionGate.Compare(Sample(950), Sample(1000), thresholdPct: 10);    // -5%
 
@@ -52,7 +52,7 @@ public class JsonGateTests
     }
 
     [Fact]
-    public void Gate_treats_a_larger_lower_is_better_metric_as_a_regression()
+    public void Compare_WorseLowerIsBetterMetric_FlagsRegression()
     {
         var baseline = Sample(1000);
         var worse = baseline with

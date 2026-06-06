@@ -10,7 +10,7 @@ public class MarkdownReporterTests
         [new StepRow("step", [StepStats.From([new StepResult("u", 1, "u")])])]);
 
     [Fact]
-    public async Task WriteAsync_preserves_notes_below_the_marker_on_regeneration()
+    public async Task WriteAsync_OnRegeneration_PreservesNotesBelowMarker()
     {
         var dir = Path.Combine(Path.GetTempPath(), "bench-md-" + Guid.NewGuid().ToString("N"));
         try

@@ -12,12 +12,12 @@ public class CoreTests
     [InlineData(5.42,     "5.42")]
     [InlineData(0.305,    "0.305")]
     [InlineData(-12.5,    "-12.5")]
-    public void NumberFormat_is_adaptive_and_invariant(double v, string expected) =>
+    public void Value_DifferentMagnitudes_FormatsAdaptivelyAndInvariant(double v, string expected) =>
         Assert.Equal(expected, NumberFormat.Value(v));
 
     // ── StepStats ─────────────────────────────────────────────────────────────
     [Fact]
-    public void StepStats_aggregates_median_min_max_samples()
+    public void From_MultipleSamples_AggregatesMedianMinMax()
     {
         var s = StepStats.From(
         [
@@ -35,7 +35,7 @@ public class CoreTests
     }
 
     [Fact]
-    public void StepStats_single_sample_has_zero_spread()
+    public void From_SingleSample_HasZeroSpread()
     {
         var s = StepStats.From([new StepResult("MB", 42, "MB", IsLowerBetter: true)]);
 
@@ -46,7 +46,7 @@ public class CoreTests
     }
 
     [Fact]
-    public void StepStats_even_count_medians_the_two_middle()
+    public void From_EvenSampleCount_AveragesTwoMiddleValues()
     {
         var s = StepStats.From(
         [
@@ -59,7 +59,7 @@ public class CoreTests
 
     // ── ConsoleReporter.RenderTable ───────────────────────────────────────────
     [Fact]
-    public void RenderTable_adds_a_delta_column_and_computes_gain()
+    public void RenderTable_NonBaselineVariant_AddsDeltaColumnWithGain()
     {
         var report = new UseCaseReport(
             new UseCaseMetadata("t", "T", "C", BenchmarkEngine.Stopwatch, "d"),
@@ -79,7 +79,7 @@ public class CoreTests
 
     // ── UseCaseRegistry ───────────────────────────────────────────────────────
     [Fact]
-    public void Registry_resolves_case_insensitively_and_filters_by_category()
+    public void Registry_RegisteredUseCases_AreResolvableByIdAndCategory()
     {
         var reg = new UseCaseRegistry()
             .Register(() => new FakeUseCase("a.one", "Cat"))

@@ -201,3 +201,23 @@ chain (not each step) is repeated, so stateful steps always start from the same 
   versions go in `Directory.Packages.props`** (csproj reference packages with no `Version`); the SDK is
   pinned by `global.json`.
 - Pure Core logic gets a fast unit test in `tests/Benchmark.UnitTests`; only Docker/DB work goes in `tests/Integration`.
+
+### Test naming
+
+Name every test with the **3-part** convention — PascalCase segments separated by underscores:
+
+```
+UnitUnderTest_Scenario_ExpectedBehavior
+```
+
+| Part | Meaning | Examples |
+|---|---|---|
+| **UnitUnderTest** | the method or type being exercised | `Compare`, `WriteAsync`, `From`, `Core` |
+| **Scenario** | the input or state under test | `ThroughputDropBeyondThreshold`, `SingleSample`, `OnRegeneration` |
+| **ExpectedBehavior** | the asserted outcome | `FlagsRegression`, `HasZeroSpread`, `PreservesNotesBelowMarker` |
+
+- ✅ `Compare_ThroughputDropBeyondThreshold_FlagsRegression`
+- ✅ `WriteAsync_OnRegeneration_PreservesNotesBelowMarker`
+- ❌ `gate_flags_a_drop` / `TestCompare` / `Compare_works` — no scenario+expectation, or not 3 parts.
+
+Keep one behavior per test (one logical assertion theme); if a name needs "And", consider splitting it.

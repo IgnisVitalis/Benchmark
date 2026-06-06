@@ -41,8 +41,9 @@ dotnet test tests/Integration/Integration.csproj --filter "FullyQualifiedName~Ar
 
 ## Conventions
 
-- Adding a use case, step, provider, or algorithm benchmark → follow the recipes in `AGENT.md §6`, then
-  register it in `Program.cs`, reference it from `Benchmark.Cli.csproj`, and add it to the README catalog
-  + the solution (`dotnet sln Benchmark.sln add --solution-folder … <path>`).
+- Adding a use case, step, or DB provider → follow the recipes in `AGENT.md §6`, then register it in
+  `Program.cs`, reference it from `Benchmark.Cli.csproj`, and add it to the README catalog + the solution
+  (`dotnet sln Benchmark.sln add --solution-folder … <path>`).
 - Prefer extending the framework over special-casing. Keep steps portable (talk to `IDbProvider`, not a driver).
 - Don't hand-edit generated `Results/*.md` numbers — re-run the use case instead.
+- Name tests with the 3-part convention `MethodUnderTest_Scenario_ExpectedBehavior` — full rule + examples in `AGENT.md §8`.

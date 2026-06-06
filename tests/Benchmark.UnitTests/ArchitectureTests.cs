@@ -9,7 +9,7 @@ using Benchmark.UseCases.Database;
 public class ArchitectureTests
 {
     [Fact]
-    public void Core_depends_only_on_the_bcl()
+    public void Core_ReferencedAssemblies_AreBclOnly()
     {
         var offenders = NonBclReferences(typeof(IUseCase).Assembly);
         Assert.True(offenders.Count == 0,
@@ -17,7 +17,7 @@ public class ArchitectureTests
     }
 
     [Fact]
-    public void Database_abstractions_have_no_driver_dependency()
+    public void DatabaseAbstractions_ReferencedAssemblies_HaveNoDbDriver()
     {
         var refs = typeof(IDbProvider).Assembly
             .GetReferencedAssemblies()
