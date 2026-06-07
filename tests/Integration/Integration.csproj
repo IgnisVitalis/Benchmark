@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.MongoDb" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -31,6 +32,9 @@
     <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.Abstractions\Benchmark.UseCases.Database.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.Postgres\Benchmark.UseCases.Database.Postgres.csproj" />
     <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.Mssql\Benchmark.UseCases.Database.Mssql.csproj" />
+    <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.DeviceViews.Abstractions\Benchmark.UseCases.Database.DeviceViews.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.DeviceViews.Postgres\Benchmark.UseCases.Database.DeviceViews.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.DeviceViews.Mongo\Benchmark.UseCases.Database.DeviceViews.Mongo.csproj" />
   </ItemGroup>
 
 </Project>

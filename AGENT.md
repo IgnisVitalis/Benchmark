@@ -76,7 +76,10 @@ Benchmark.sln
 │       ├── Benchmark.UseCases.Database.Abstractions/  # IDbProvider, BenchRow, InsertHelpers,
 │       │                                              # the 7 steps, DbInsertUseCase  (dep-free)
 │       ├── Benchmark.UseCases.Database.Postgres/      # Npgsql ONLY
-│       └── Benchmark.UseCases.Database.Mssql/         # Microsoft.Data.SqlClient ONLY
+│       ├── Benchmark.UseCases.Database.Mssql/         # Microsoft.Data.SqlClient ONLY
+│       ├── …DeviceViews.Abstractions/                 # IDeviceStore, Device, steps  (dep-free)
+│       ├── …DeviceViews.Postgres/                     # relational + JSONB device stores (Npgsql)
+│       └── …DeviceViews.Mongo/                        # MongoDB device store (MongoDB.Driver)
 │
 ├── tests/
 │   ├── Benchmark.UnitTests/                          # fast Core tests + dep-free guards (no Docker)
@@ -92,6 +95,12 @@ Benchmark.sln
 case by id, and calls `IUseCase.RunAsync(HostContext)`. A `ChainedUseCase` runs its steps × variants
 through `ChainRunner` (live console output) and returns a `UseCaseReport`; `MarkdownReporter` writes it
 to `Results/<id>.md`. The report is engine-agnostic, so any future engine plugs into the same reporting.
+
+**Variants compare more than data.** The `database.device-views` use case uses variants to compare whole
+**storage representations** — relational columns, a JSONB blob, and MongoDB documents — behind an
+`IDeviceStore`, with identical data and identical indexed fields (only the representation differs). Each
+engine is its own leaf project (`…DeviceViews.{Postgres,Mongo}`); the CLI composes the `NamedStore` list,
+adding MongoDB only when a Mongo connection string is configured.
 
 ---
 

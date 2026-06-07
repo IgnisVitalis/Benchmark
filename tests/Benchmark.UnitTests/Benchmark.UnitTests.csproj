@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Benchmark.Core\Benchmark.Core.csproj" />
     <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.Abstractions\Benchmark.UseCases.Database.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\UseCases\Benchmark.UseCases.Database.DeviceViews.Abstractions\Benchmark.UseCases.Database.DeviceViews.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

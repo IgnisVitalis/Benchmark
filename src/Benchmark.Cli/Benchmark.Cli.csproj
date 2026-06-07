@@ -19,6 +19,9 @@
     <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.Abstractions\Benchmark.UseCases.Database.Abstractions.csproj" />
     <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.Postgres\Benchmark.UseCases.Database.Postgres.csproj" />
     <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.Mssql\Benchmark.UseCases.Database.Mssql.csproj" />
+    <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.DeviceViews.Abstractions\Benchmark.UseCases.Database.DeviceViews.Abstractions.csproj" />
+    <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.DeviceViews.Postgres\Benchmark.UseCases.Database.DeviceViews.Postgres.csproj" />
+    <ProjectReference Include="..\UseCases\Benchmark.UseCases.Database.DeviceViews.Mongo\Benchmark.UseCases.Database.DeviceViews.Mongo.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Device-views domain: the storage-agnostic model, IDeviceStore, generator, steps and use case.
+       Dependency-free (Core only); concrete stores live in the per-engine leaf projects. -->
+  <PropertyGroup>
+    <RootNamespace>Benchmark.UseCases.Database.DeviceViews</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Benchmark.Core\Benchmark.Core.csproj" />
+  </ItemGroup>
+
+</Project>

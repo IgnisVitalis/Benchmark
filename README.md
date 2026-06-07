@@ -35,6 +35,7 @@ Each use case maps 1:1 to one generated report. Add a row here when you add a us
 |---|---|---|---|---|
 | `database.postgres.uuid-insert` | Database | Stopwatch | Random `Guid.NewGuid()` vs time-ordered `Guid v7` across bulk / single / prepared / shared-tx / batched inserts, index size and point lookups on a fresh table. | [report](Results/database.postgres.uuid-insert.md) |
 | `database.mssql.uuid-insert` | Database | Stopwatch | The same suite against SQL Server (SqlBulkCopy, clustered-index splits). | [report](Results/database.mssql.uuid-insert.md) |
+| `database.device-views` | Database | Stopwatch | The same 20-field Device stored as relational columns, a single JSONB column, or MongoDB documents — load, lookups (indexed-unique / indexed / non-indexed), update, range query, storage size. | [report](Results/database.device-views.md) |
 
 ---
 

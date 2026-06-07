@@ -1,6 +1,7 @@
 using System.Reflection;
 using Benchmark.Core;
 using Benchmark.UseCases.Database;
+using Benchmark.UseCases.Database.DeviceViews;
 
 /// <summary>
 /// Guards the framework's central invariant: the Core (and the DB abstraction layer) stay free of any
@@ -27,6 +28,18 @@ public class ArchitectureTests
         Assert.DoesNotContain("Npgsql", refs);
         Assert.DoesNotContain("Microsoft.Data.SqlClient", refs);
         Assert.DoesNotContain("BenchmarkDotNet", refs);
+    }
+
+    [Fact]
+    public void DeviceViewsAbstractions_ReferencedAssemblies_HaveNoDbDriver()
+    {
+        var refs = typeof(IDeviceStore).Assembly
+            .GetReferencedAssemblies()
+            .Select(a => a.Name)
+            .ToList();
+
+        Assert.DoesNotContain("Npgsql", refs);
+        Assert.DoesNotContain("MongoDB.Driver", refs);
     }
 
     private static List<string> NonBclReferences(Assembly asm) =>

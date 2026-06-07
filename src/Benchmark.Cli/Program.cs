@@ -2,6 +2,9 @@ using Benchmark.Core;
 using Benchmark.UseCases.Database;
 using Benchmark.UseCases.Database.Mssql;
 using Benchmark.UseCases.Database.Postgres;
+using Benchmark.UseCases.Database.DeviceViews;
+using Benchmark.UseCases.Database.DeviceViews.Postgres;
+using Benchmark.UseCases.Database.DeviceViews.Mongo;
 using Microsoft.Extensions.Configuration;
 
 // ── Benchmark.Cli — the performance use-case runner ───────────────────────────
@@ -225,6 +228,22 @@ UseCaseRegistry BuildRegistry(IConfiguration cfg, IRunLog logger)
                 break;
         }
     }
+
+    // Device storage-views comparison. Postgres (relational + JSONB) is required; MongoDB is added as a
+    // third representation when a Mongo connection string is also configured.
+    var dv = cfg.GetSection("DeviceViews").Get<DeviceViewsConfig>();
+    if (dv is not null && !string.IsNullOrWhiteSpace(dv.ConnStr))
+        registry.Register(() =>
+        {
+            var stores = new List<NamedStore>
+            {
+                new("Relational", new PostgresRelationalDeviceStore(dv.ConnStr)),
+                new("JSONB",      new PostgresJsonbDeviceStore(dv.ConnStr)),
+            };
+            if (!string.IsNullOrWhiteSpace(dv.MongoConnStr))
+                stores.Add(new NamedStore("MongoDB", new MongoDeviceStore(dv.MongoConnStr)));
+            return new DeviceViewsUseCase(dv, stores);
+        });
 
     return registry;
 }

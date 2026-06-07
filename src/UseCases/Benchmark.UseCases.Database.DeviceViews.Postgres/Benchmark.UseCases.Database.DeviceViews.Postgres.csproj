@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PostgreSQL device stores (relational + JSONB). Npgsql ONLY here. -->
+  <PropertyGroup>
+    <RootNamespace>Benchmark.UseCases.Database.DeviceViews.Postgres</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Benchmark.UseCases.Database.DeviceViews.Abstractions\Benchmark.UseCases.Database.DeviceViews.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
