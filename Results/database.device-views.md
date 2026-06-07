@@ -31,6 +31,42 @@
 
 <!-- notes:keep-below — content under this line survives regeneration -->
 
-## Notes
+## Notes — indexed JSONB property: search & update
 
-_Hand-written analysis — kept across re-runs. Add yours here._
+The question behind this run: can you index a single property *inside* a JSONB column and search/update it
+about as fast as a plain column? Relational is the baseline; MongoDB is a third reference. Identical data,
+identical indexed fields — only the storage representation differs.
+
+What the numbers show (the relatives hold across re-runs; exact figures are in the table above):
+
+- **Read by the indexed property** (uuid) — JSONB matched the plain column (within a few %). The expression
+  index on `data->>'uuid'` does its job.
+- **Update by the indexed property** — JSONB modestly slower (~10–15%): the whole JSON document is rewritten.
+- **Search a NON-indexed field** (serial, battery range) — JSONB ~20–30% slower: it scans and extracts from
+  every document.
+- **Storage** — JSONB ≈ 2.4× the relational table (it stores every key name in every row).
+- **MongoDB** (reference) — generally slower here, except the low-selectivity `type` lookup.
+
+Caveats:
+- The **type** lookup is low-cardinality (8 values) + `LIMIT`, so Postgres often seq-scans rather than using
+  `ix_devices_type` — read that row as "scan-ish", not a clean indexed lookup. The uuid read/update are the
+  unambiguous index results.
+- Single run on one machine; the small ±CV% (mostly 1–4%) means the medians are stable. Re-run to refresh.
+
+### Shareable summary
+
+> Postgres can put an index on one property inside a JSONB column. I wanted to see how fast it is to search
+> and update that property — next to a plain column, with MongoDB as a third reference.
+>
+> Setup: the same record stored three ways — plain table columns, one JSONB document, and a MongoDB document
+> — same data (100k records), same index on the same property.
+>
+> What one run (median of 3) showed:
+> — Reading by the indexed property: JSONB was as fast as the plain column (within a few %).
+> — Updating by the indexed property: modestly slower (~10–15%).
+> — Searching a field with no index: ~20–30% slower — JSONB scans and parses each document.
+> — Storage: the JSONB version used about 2.4× the disk of plain columns.
+> — MongoDB, as a reference, was generally slower here.
+>
+> So reading through an indexed JSONB property was essentially free; the cost showed up in updates,
+> un-indexed queries, and storage.

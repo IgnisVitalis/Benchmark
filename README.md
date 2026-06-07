@@ -37,6 +37,11 @@ Each use case maps 1:1 to one generated report. Add a row here when you add a us
 | `database.mssql.uuid-insert` | Database | Stopwatch | The same suite against SQL Server (SqlBulkCopy, clustered-index splits). | [report](Results/database.mssql.uuid-insert.md) |
 | `database.device-views` | Database | Stopwatch | The same 20-field Device stored as relational columns, a single JSONB column, or MongoDB documents — load, lookups (indexed-unique / indexed / non-indexed), update, range query, storage size. | [report](Results/database.device-views.md) |
 
+**Highlight — `database.device-views`:** reading by an *indexed* property inside a JSONB column was about as
+fast as a plain column (within a few %); the cost showed up in updates (~10–15%), un-indexed scans
+(~20–30% slower) and storage (~2.4×). MongoDB included as a reference — full numbers and notes in the
+[report](Results/database.device-views.md).
+
 ---
 
 ## Architecture (in one breath)
