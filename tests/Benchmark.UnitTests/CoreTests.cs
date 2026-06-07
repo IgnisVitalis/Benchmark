@@ -7,11 +7,12 @@ public class CoreTests
     // ── NumberFormat ──────────────────────────────────────────────────────────
     [Theory]
     [InlineData(0,        "0")]
-    [InlineData(299133,   "299,133")]
+    [InlineData(299133,   "299 133")]
     [InlineData(382,      "382")]
+    [InlineData(25.7,     "26")]
     [InlineData(5.42,     "5.42")]
     [InlineData(0.305,    "0.305")]
-    [InlineData(-12.5,    "-12.5")]
+    [InlineData(-12.3,    "-12")]
     public void Value_DifferentMagnitudes_FormatsAdaptivelyAndInvariant(double v, string expected) =>
         Assert.Equal(expected, NumberFormat.Value(v));
 
@@ -59,7 +60,7 @@ public class CoreTests
 
     // ── ConsoleReporter.RenderTable ───────────────────────────────────────────
     [Fact]
-    public void RenderTable_NonBaselineVariant_AddsDeltaColumnWithGain()
+    public void Render_NonBaselineVariant_ShowsDifferenceTableWithGain()
     {
         var report = new UseCaseReport(
             new UseCaseMetadata("t", "T", "C", BenchmarkEngine.Stopwatch, "d"),
@@ -68,13 +69,10 @@ public class CoreTests
             [new StepRow("step", [Stat(100), Stat(150)])],
             Warmup: 0, Iterations: 1);
 
-        var lines  = ConsoleReporter.RenderTable(report);
-        var header = lines[1];
+        var lines = ConsoleReporter.Render(report);
 
-        Assert.Contains("A",  header);
-        Assert.Contains("B",  header);
-        Assert.Contains("Δ%", header);
-        Assert.Contains(lines, l => l.Contains("+50.0%"));   // 100 → 150
+        Assert.Contains(lines, l => l.Contains("Difference vs baseline"));
+        Assert.Contains(lines, l => l.Contains("+50.0%"));   // 100 → 150 throughput
     }
 
     // ── UseCaseRegistry ───────────────────────────────────────────────────────
@@ -91,7 +89,7 @@ public class CoreTests
         Assert.Equal(2, reg.ResolveCategory("cat").Count);
     }
 
-    private static StepStats Stat(double v) => StepStats.From([new StepResult("u", v, "u")]);
+    private static StepStats Stat(double v) => StepStats.From([new StepResult("ops/sec", v, "ops/sec")]);
 
     private sealed class FakeUseCase(string id, string category) : IUseCase
     {

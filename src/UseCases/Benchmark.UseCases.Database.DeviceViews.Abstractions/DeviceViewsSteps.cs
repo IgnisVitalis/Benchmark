@@ -13,7 +13,7 @@ internal static class DeviceContext
 /// <summary>Resets the store and bulk-loads the (identical, deterministic) dataset.</summary>
 public sealed class LoadStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Load {cfg.DeviceCount:N0} devices";
+    public string Name => $"Load {NumberFormat.Value(cfg.DeviceCount)} devices";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
@@ -28,7 +28,7 @@ public sealed class LoadStep(DeviceViewsConfig cfg) : IBenchmarkStep
 /// <summary>Point lookup on the indexed unique key (the fast path).</summary>
 public sealed class LookupByUuidStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Lookup by uuid — indexed unique ×{cfg.LookupCount:N0}";
+    public string Name => $"Lookup by uuid — indexed unique ×{NumberFormat.Value(cfg.LookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
@@ -40,7 +40,7 @@ public sealed class LookupByUuidStep(DeviceViewsConfig cfg) : IBenchmarkStep
 /// <summary>Lookup on the indexed non-unique key (index range scan returning a set).</summary>
 public sealed class LookupByTypeStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Lookup by type — indexed ×{cfg.LookupCount:N0}";
+    public string Name => $"Lookup by type — indexed ×{NumberFormat.Value(cfg.LookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
@@ -52,7 +52,7 @@ public sealed class LookupByTypeStep(DeviceViewsConfig cfg) : IBenchmarkStep
 /// <summary>Point lookup on a NON-indexed field — every op is a sequential scan.</summary>
 public sealed class LookupBySerialStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Lookup by serial — NOT indexed ×{cfg.ScanLookupCount:N0}";
+    public string Name => $"Lookup by serial — NOT indexed ×{NumberFormat.Value(cfg.ScanLookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
@@ -64,7 +64,7 @@ public sealed class LookupBySerialStep(DeviceViewsConfig cfg) : IBenchmarkStep
 /// <summary>Update one indexed-key row per op.</summary>
 public sealed class UpdateByUuidStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Update by uuid — indexed ×{cfg.LookupCount:N0}";
+    public string Name => $"Update by uuid — indexed ×{NumberFormat.Value(cfg.LookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
@@ -77,7 +77,7 @@ public sealed class UpdateByUuidStep(DeviceViewsConfig cfg) : IBenchmarkStep
 /// <summary>Range/filter query on a NON-indexed numeric field.</summary>
 public sealed class RangeByBatteryStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Range battery<{cfg.LowBatteryBelow} — NOT indexed ×{cfg.ScanLookupCount:N0}";
+    public string Name => $"Range battery<{cfg.LowBatteryBelow} — NOT indexed ×{NumberFormat.Value(cfg.ScanLookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {

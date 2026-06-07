@@ -37,6 +37,7 @@ public class PostgresBenchmarkTests(ITestOutputHelper output) : IAsyncLifetime
         // Write the real report into the repo Results/ folder (Markdown + JSON, like the CLI).
         var path = await MarkdownReporter.WriteAsync(report, TestPaths.ResultsDir());
         await JsonReporter.WriteAsync(report, TestPaths.ResultsDir());
+        await CompactReporter.WriteAsync(report, TestPaths.ResultsDir());
         output.WriteLine($"Report: {path}");
     }
 }

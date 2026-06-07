@@ -63,6 +63,7 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
 
         await MarkdownReporter.WriteAsync(report, TestPaths.ResultsDir());
         await JsonReporter.WriteAsync(report, TestPaths.ResultsDir());
+        await CompactReporter.WriteAsync(report, TestPaths.ResultsDir());
     }
 
     // Loads a small known dataset into each store and checks every query returns the expected matches —

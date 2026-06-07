@@ -118,10 +118,12 @@ async Task<int> RunAsync()
         try
         {
             var report = await uc.RunAsync(host);
-            var md   = await MarkdownReporter.WriteAsync(report, resultsDir, host.Ct);
-            var json = await JsonReporter.WriteAsync(report, resultsDir, host.Ct);
+            var md      = await MarkdownReporter.WriteAsync(report, resultsDir, host.Ct);
+            var json    = await JsonReporter.WriteAsync(report, resultsDir, host.Ct);
+            var compact = await CompactReporter.WriteAsync(report, resultsDir, host.Ct);
             log.Line($"→ {md}");
             log.Line($"→ {json}");
+            log.Line($"→ {compact}");
 
             if (gate)
                 regressed |= await GateAsync(report);

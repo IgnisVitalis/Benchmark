@@ -8,7 +8,7 @@ namespace Benchmark.UseCases.Database.Steps;
 /// them to the context for any later step that wants the same keys.</summary>
 public sealed class PointLookupsStep(DatabaseConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"{cfg.LookupCount:N0} point lookups";
+    public string Name => $"{NumberFormat.Value(cfg.LookupCount)} point lookups";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {

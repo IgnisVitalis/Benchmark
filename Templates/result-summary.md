@@ -8,7 +8,8 @@ to sell a conclusion.
 
 ## How to use
 
-1. Run the use case, then **screenshot the table** (the console table or the one in `Results/<id>.md`).
+1. Run the use case, then **screenshot the tables** from `Results/<id>.compact.md` — narrow, share-ready
+   (Throughput / Time / Difference / Size). (The console table or `Results/<id>.md` also work.)
 2. Fill in the skeleton below. Aim for **~150–180 words**.
 3. Share the table as the **image**. Most places you'll paste this (feeds, chat, docs) render Markdown
    tables poorly, and feeds truncate after a few lines — so lead with the point and attach the table.

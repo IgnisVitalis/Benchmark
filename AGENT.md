@@ -115,6 +115,10 @@ adding MongoDB only when a Mongo connection string is configured.
 - To keep hand-written narrative (a "Findings" section), put it in `README.md`, or extend
   `MarkdownReporter` to preserve a block below a marker.
 
+- Every run also writes a **compact** report — `Results/<id>.compact.md` — narrow, share-friendly tables
+  (Throughput / Time / Difference / Size) derived automatically from each step's metric (rate → throughput,
+  timed → time, size → a × multiplier). Same layout for every use case. See `Templates/result-summary.md`.
+
 ### Validation — machine-readable output + regression gate
 - Each `run` also writes `Results/<id>.json` (BCL `System.Text.Json`, so Core stays dep-free) for
   history, diffing and CI ingestion. `JsonReporter` reads it back.

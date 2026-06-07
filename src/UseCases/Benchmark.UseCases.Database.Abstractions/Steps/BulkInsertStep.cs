@@ -6,7 +6,7 @@ namespace Benchmark.UseCases.Database.Steps;
 /// populates the table the later read steps depend on.</summary>
 public sealed class BulkInsertStep(DatabaseConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Bulk insert {cfg.BulkCount:N0} rows";
+    public string Name => $"Bulk insert {NumberFormat.Value(cfg.BulkCount)} rows";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
