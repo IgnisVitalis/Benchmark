@@ -1,22 +1,31 @@
 using Benchmark.UseCases.Database.DeviceViews;
 
-/// <summary>The generator must be deterministic so every storage variant inserts identical data.</summary>
+/// <summary>The generator must be deterministic per index, so every storage variant inserts identical data
+/// and a streamed 100M run is reproducible without holding the set in memory.</summary>
 public class DeviceGeneratorTests
 {
     [Fact]
-    public void Generate_CalledTwice_ProducesIdenticalData()
+    public void Generate_SameIndex_ProducesIdenticalDevice()
     {
-        var a = DeviceGenerator.Generate(200);
-        var b = DeviceGenerator.Generate(200);
-
-        Assert.Equal(200, a.Length);
-        Assert.Equal(a, b);   // Device is a record → structural equality across all 20 fields
+        Assert.Equal(DeviceGenerator.Generate(123), DeviceGenerator.Generate(123));   // record → structural equality
     }
 
     [Fact]
-    public void Generate_AnyCount_ProducesUniqueUuids()
+    public void Generate_DifferentIndices_ProduceDifferentDevices()
     {
-        var devices = DeviceGenerator.Generate(1000);
+        Assert.NotEqual(DeviceGenerator.Generate(1), DeviceGenerator.Generate(2));
+    }
+
+    [Fact]
+    public void Stream_CalledTwice_ProducesIdenticalData()
+    {
+        Assert.Equal(DeviceGenerator.Stream(200).ToArray(), DeviceGenerator.Stream(200).ToArray());
+    }
+
+    [Fact]
+    public void Stream_AnyCount_ProducesUniqueUuids()
+    {
+        var devices = DeviceGenerator.Stream(1000).ToArray();
 
         Assert.Equal(1000, devices.Select(d => d.Uuid).Distinct().Count());
     }

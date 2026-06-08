@@ -5,23 +5,22 @@ namespace Benchmark.UseCases.Database.DeviceViews.Steps;
 /// <summary>Typed accessors for the items the use case publishes into the shared context.</summary>
 internal static class DeviceContext
 {
-    public static IDeviceStore Store(this UseCaseContext c)   => c.Get<IDeviceStore>();
-    public static Device[]     Devices(this UseCaseContext c) => c.Get<Device[]>();
-    public static LookupKeys   Keys(this UseCaseContext c)    => c.Get<LookupKeys>();
+    public static IDeviceStore Store(this UseCaseContext c) => c.Get<IDeviceStore>();
+    public static LookupKeys   Keys(this UseCaseContext c)  => c.Get<LookupKeys>();
 }
 
-/// <summary>Resets the store and bulk-loads the (identical, deterministic) dataset.</summary>
+/// <summary>Resets the store and bulk-loads the (identical, deterministic) dataset, streamed from the
+/// generator so the whole set is never held in memory.</summary>
 public sealed class LoadStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
     public string Name => $"Load {NumberFormat.Value(cfg.DeviceCount)} devices";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
-        var store   = ctx.Store();
-        var devices = ctx.Devices();
+        var store = ctx.Store();
         await store.ResetAsync(ctx.Ct);
-        var elapsed = await StopwatchEngine.MeasureAsync(() => store.InsertManyAsync(devices, ctx.Ct));
-        return StepResult.Throughput(devices.Length, elapsed, "devices/sec");
+        var elapsed = await StopwatchEngine.MeasureAsync(() => store.InsertManyAsync(DeviceGenerator.Stream(cfg.DeviceCount), ctx.Ct));
+        return StepResult.Throughput(cfg.DeviceCount, elapsed, "devices/sec");
     }
 }
 
@@ -37,14 +36,15 @@ public sealed class LookupByUuidStep(DeviceViewsConfig cfg) : IBenchmarkStep
     }
 }
 
-/// <summary>Lookup on the indexed non-unique key (index range scan returning a set).</summary>
-public sealed class LookupByTypeStep(DeviceViewsConfig cfg) : IBenchmarkStep
+/// <summary>Lookup on the indexed non-unique key (index range scan returning a bounded set). Uses
+/// <c>model</c> (~1000 values) so the lookup is selective enough that the index is genuinely used.</summary>
+public sealed class LookupByModelStep(DeviceViewsConfig cfg) : IBenchmarkStep
 {
-    public string Name => $"Lookup by type — indexed ×{NumberFormat.Value(cfg.LookupCount)}";
+    public string Name => $"Lookup by model — indexed ×{NumberFormat.Value(cfg.LookupCount)}";
 
     public async Task<StepResult?> RunAsync(UseCaseContext ctx)
     {
-        var elapsed = await StopwatchEngine.MeasureAsync(() => ctx.Store().FindByTypeAsync(ctx.Keys().Types, cfg.LookupCount, cfg.RangeLimit, ctx.Ct));
+        var elapsed = await StopwatchEngine.MeasureAsync(() => ctx.Store().FindByModelAsync(ctx.Keys().Models, cfg.LookupCount, cfg.RangeLimit, ctx.Ct));
         return StepResult.Throughput(cfg.LookupCount, elapsed, "lookups/sec");
     }
 }

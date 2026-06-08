@@ -16,8 +16,9 @@ namespace Benchmark.UseCases.Database.DeviceViews.Mongo;
 /// </summary>
 public sealed class MongoDeviceStore : IDeviceStore
 {
-    private const string DbName  = "devicebench";
-    private const string ColName = "devices";
+    private const string DbName    = "devicebench";
+    private const string ColName   = "devices";
+    private const int    BatchSize = 50_000;   // insert in batches so a streamed 100M load stays bounded
 
     private readonly IMongoClient _client;
     private readonly IMongoCollection<Device> _col;
@@ -52,14 +53,18 @@ public sealed class MongoDeviceStore : IDeviceStore
         var db = _client.GetDatabase(DbName);
         await db.DropCollectionAsync(ColName, ct);
         await db.CreateCollectionAsync(ColName, cancellationToken: ct);
-        // Secondary index on Type before load, so it is maintained during insert (matches the SQL stores).
+        // Secondary index on Model before load, so it is maintained during insert (matches the SQL stores).
         await _col.Indexes.CreateOneAsync(
-            new CreateIndexModel<Device>(Builders<Device>.IndexKeys.Ascending(d => d.Type)),
+            new CreateIndexModel<Device>(Builders<Device>.IndexKeys.Ascending(d => d.Model)),
             cancellationToken: ct);
     }
 
-    public Task InsertManyAsync(IReadOnlyList<Device> devices, CancellationToken ct) =>
-        _col.InsertManyAsync(devices, new InsertManyOptions { IsOrdered = false }, ct);
+    public async Task InsertManyAsync(IEnumerable<Device> devices, CancellationToken ct)
+    {
+        var opts = new InsertManyOptions { IsOrdered = false };
+        foreach (var batch in devices.Chunk(BatchSize))   // Chunk pulls one batch at a time → constant memory
+            await _col.InsertManyAsync(batch, opts, ct);
+    }
 
     // The lookups fetch the matching uuids (projected to _id) — the same workload as the SQL stores'
     // "SELECT uuid … [LIMIT n]" — rather than a server-side count.
@@ -76,13 +81,13 @@ public sealed class MongoDeviceStore : IDeviceStore
         return found;
     }
 
-    public async Task<long> FindByTypeAsync(IReadOnlyList<string> types, int repeats, int limit, CancellationToken ct)
+    public async Task<long> FindByModelAsync(IReadOnlyList<string> models, int repeats, int limit, CancellationToken ct)
     {
         long found = 0;
         for (int i = 0; i < repeats; i++)
         {
             ct.ThrowIfCancellationRequested();
-            var filter = Builders<Device>.Filter.Eq(d => d.Type, types[i % types.Count]);   // Type index
+            var filter = Builders<Device>.Filter.Eq(d => d.Model, models[i % models.Count]);   // Model index
             found += (await _col.Find(filter).Limit(limit).Project(d => d.Uuid).ToListAsync(ct)).Count;
         }
         return found;

@@ -35,11 +35,11 @@ public sealed class PostgresRelationalDeviceStore(string connStr) : IDeviceStore
                 registered_at     timestamptz NOT NULL,
                 description       text NOT NULL
             );
-            CREATE INDEX ix_devices_type ON devices(type);
+            CREATE INDEX ix_devices_model ON devices(model);
             """, ct);
     }
 
-    public async Task InsertManyAsync(IReadOnlyList<Device> devices, CancellationToken ct)
+    public async Task InsertManyAsync(IEnumerable<Device> devices, CancellationToken ct)
     {
         await using var conn = await PgHelpers.OpenAsync(connStr, ct);
         await using var w = await conn.BeginBinaryImportAsync(
@@ -93,21 +93,21 @@ public sealed class PostgresRelationalDeviceStore(string connStr) : IDeviceStore
         return found;
     }
 
-    public async Task<long> FindByTypeAsync(IReadOnlyList<string> types, int repeats, int limit, CancellationToken ct)
+    public async Task<long> FindByModelAsync(IReadOnlyList<string> models, int repeats, int limit, CancellationToken ct)
     {
         await using var conn = await PgHelpers.OpenAsync(connStr, ct);
         await using var cmd = conn.CreateCommand();
-        // NB: 'type' is low-cardinality, so with a LIMIT the planner may seq-scan rather than use
-        // ix_devices_type. The three representations still run the same query — index *usage* is not asserted.
-        cmd.CommandText = $"SELECT uuid FROM devices WHERE type = @t LIMIT {limit}";
-        var p = cmd.Parameters.Add("t", NpgsqlDbType.Text);
+        // 'model' has ~1000 values, so WHERE model = @m LIMIT n is selective enough that the planner uses
+        // ix_devices_model (unlike a low-cardinality column, where a LIMIT tempts it into a seq scan).
+        cmd.CommandText = $"SELECT uuid FROM devices WHERE model = @m LIMIT {limit}";
+        var p = cmd.Parameters.Add("m", NpgsqlDbType.Text);
         await cmd.PrepareAsync(ct);
 
         long found = 0;
         for (int i = 0; i < repeats; i++)
         {
             ct.ThrowIfCancellationRequested();
-            p.Value = types[i % types.Count];
+            p.Value = models[i % models.Count];
             await using var r = await cmd.ExecuteReaderAsync(ct);
             while (await r.ReadAsync(ct)) found++;
         }

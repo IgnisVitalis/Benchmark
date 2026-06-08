@@ -21,11 +21,11 @@ public sealed class PostgresJsonbDeviceStore(string connStr) : IDeviceStore
             DROP TABLE IF EXISTS devices_jsonb;
             CREATE TABLE devices_jsonb (data jsonb NOT NULL);
             CREATE UNIQUE INDEX ux_devices_jsonb_uuid ON devices_jsonb ((data->>'uuid'));
-            CREATE INDEX ix_devices_jsonb_type ON devices_jsonb ((data->>'type'));
+            CREATE INDEX ix_devices_jsonb_model ON devices_jsonb ((data->>'model'));
             """, ct);
     }
 
-    public async Task InsertManyAsync(IReadOnlyList<Device> devices, CancellationToken ct)
+    public async Task InsertManyAsync(IEnumerable<Device> devices, CancellationToken ct)
     {
         await using var conn = await PgHelpers.OpenAsync(connStr, ct);
         await using var w = await conn.BeginBinaryImportAsync("COPY devices_jsonb (data) FROM STDIN (FORMAT BINARY)", ct);
@@ -56,19 +56,19 @@ public sealed class PostgresJsonbDeviceStore(string connStr) : IDeviceStore
         return found;
     }
 
-    public async Task<long> FindByTypeAsync(IReadOnlyList<string> types, int repeats, int limit, CancellationToken ct)
+    public async Task<long> FindByModelAsync(IReadOnlyList<string> models, int repeats, int limit, CancellationToken ct)
     {
         await using var conn = await PgHelpers.OpenAsync(connStr, ct);
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"SELECT data->>'uuid' FROM devices_jsonb WHERE data->>'type' = @t LIMIT {limit}";
-        var p = cmd.Parameters.Add("t", NpgsqlDbType.Text);
+        cmd.CommandText = $"SELECT data->>'uuid' FROM devices_jsonb WHERE data->>'model' = @m LIMIT {limit}";   // selective → uses ix_devices_jsonb_model
+        var p = cmd.Parameters.Add("m", NpgsqlDbType.Text);
         await cmd.PrepareAsync(ct);
 
         long found = 0;
         for (int i = 0; i < repeats; i++)
         {
             ct.ThrowIfCancellationRequested();
-            p.Value = types[i % types.Count];
+            p.Value = models[i % models.Count];
             await using var r = await cmd.ExecuteReaderAsync(ct);
             while (await r.ReadAsync(ct)) found++;
         }

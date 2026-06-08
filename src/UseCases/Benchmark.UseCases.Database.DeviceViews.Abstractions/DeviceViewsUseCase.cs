@@ -11,8 +11,7 @@ namespace Benchmark.UseCases.Database.DeviceViews;
 /// </summary>
 public sealed class DeviceViewsUseCase(DeviceViewsConfig cfg, IReadOnlyList<NamedStore> stores) : ChainedUseCase
 {
-    private Device[]   _devices = [];
-    private LookupKeys _keys    = new([], [], []);
+    private LookupKeys _keys = new([], [], []);
 
     public override UseCaseMetadata Metadata { get; } = new(
         Id:          "database.device-views",
@@ -28,7 +27,7 @@ public sealed class DeviceViewsUseCase(DeviceViewsConfig cfg, IReadOnlyList<Name
     [
         new LoadStep(cfg),
         new LookupByUuidStep(cfg),
-        new LookupByTypeStep(cfg),
+        new LookupByModelStep(cfg),
         new LookupBySerialStep(cfg),
         new UpdateByUuidStep(cfg),
         new RangeByBatteryStep(cfg),
@@ -38,17 +37,12 @@ public sealed class DeviceViewsUseCase(DeviceViewsConfig cfg, IReadOnlyList<Name
     protected override IReadOnlyList<Variant> Variants =>
         stores.Select(s => new Variant(s.Label, ctx => ctx.Set(s.Store))).ToList();
 
-    protected override void SeedContext(UseCaseContext ctx)
-    {
-        ctx.Set(_devices);
-        ctx.Set(_keys);
-    }
+    protected override void SeedContext(UseCaseContext ctx) => ctx.Set(_keys);
 
     protected override Task SetupAsync(HostContext host)
     {
-        _devices = DeviceGenerator.Generate(cfg.DeviceCount);
-        _keys    = SampleKeys(_devices, cfg);
-        host.Log.Line($"Generated {_devices.Length:N0} devices; comparing {stores.Count} representation(s).");
+        _keys = SampleKeys(cfg);
+        host.Log.Line($"Streaming {NumberFormat.Value(cfg.DeviceCount)} devices; comparing {stores.Count} representation(s).");
         host.Log.Line("");
         return Task.CompletedTask;
     }
@@ -59,19 +53,22 @@ public sealed class DeviceViewsUseCase(DeviceViewsConfig cfg, IReadOnlyList<Name
             await s.Store.DisposeAsync();
     }
 
-    private static LookupKeys SampleKeys(Device[] devices, DeviceViewsConfig cfg)
+    // Sample keys by drawing random indices and generating just those devices — works the same whether the
+    // set is 100k or 100M, since each device is reproducible from its index alone.
+    private static LookupKeys SampleKeys(DeviceViewsConfig cfg)
     {
         var rng     = new Random(7);
-        int sample  = Math.Min(devices.Length, Math.Max(cfg.LookupCount, cfg.ScanLookupCount));
+        int sample  = Math.Max(1, Math.Min(cfg.DeviceCount, Math.Max(cfg.LookupCount, cfg.ScanLookupCount)));
         var uuids   = new Guid[sample];
         var serials = new string[sample];
+        var models  = new HashSet<string>();
         for (int i = 0; i < sample; i++)
         {
-            var d = devices[rng.Next(devices.Length)];
+            var d = DeviceGenerator.Generate(rng.Next(cfg.DeviceCount));
             uuids[i]   = d.Uuid;
             serials[i] = d.SerialNumber;
+            models.Add(d.Model);
         }
-        var types = devices.Select(d => d.Type).Distinct().ToArray();
-        return new LookupKeys(uuids, types, serials);
+        return new LookupKeys(uuids, models.Count > 0 ? models.ToArray() : ["M0000"], serials);
     }
 }

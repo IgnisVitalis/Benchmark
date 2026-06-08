@@ -13,13 +13,15 @@ public interface IDeviceStore : IAsyncDisposable
     /// <summary>DROP + CREATE the backing table/collection and its indexes.</summary>
     Task ResetAsync(CancellationToken ct);
 
-    Task InsertManyAsync(IReadOnlyList<Device> devices, CancellationToken ct);
+    /// <summary>Bulk-loads a (lazily streamed) device set — never materialise the whole sequence.</summary>
+    Task InsertManyAsync(IEnumerable<Device> devices, CancellationToken ct);
 
     /// <summary>Point lookup on the indexed unique key. Returns total rows matched.</summary>
     Task<long> FindByUuidAsync(IReadOnlyList<Guid> uuids, int repeats, CancellationToken ct);
 
-    /// <summary>Lookup on the indexed non-unique key (returns a bounded set per query).</summary>
-    Task<long> FindByTypeAsync(IReadOnlyList<string> types, int repeats, int limit, CancellationToken ct);
+    /// <summary>Lookup on an indexed non-unique key (<c>model</c>, ~1000 values → selective enough that
+    /// the index is genuinely used). Returns a bounded set per query.</summary>
+    Task<long> FindByModelAsync(IReadOnlyList<string> models, int repeats, int limit, CancellationToken ct);
 
     /// <summary>Point lookup on a NON-indexed field — forces a sequential scan.</summary>
     Task<long> FindBySerialAsync(IReadOnlyList<string> serials, int repeats, CancellationToken ct);
@@ -38,4 +40,4 @@ public interface IDeviceStore : IAsyncDisposable
 public sealed record NamedStore(string Label, IDeviceStore Store);
 
 /// <summary>Lookup keys sampled once from the dataset and reused across every variant (fairness).</summary>
-public sealed record LookupKeys(IReadOnlyList<Guid> Uuids, IReadOnlyList<string> Types, IReadOnlyList<string> Serials);
+public sealed record LookupKeys(IReadOnlyList<Guid> Uuids, IReadOnlyList<string> Models, IReadOnlyList<string> Serials);

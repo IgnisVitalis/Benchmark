@@ -35,7 +35,7 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
 
         var cfg = new DeviceViewsConfig
         {
-            DeviceCount     = 100_000,
+            DeviceCount     = 1_000_000,
             LookupCount     = 500,
             ScanLookupCount = 20,
             ConnStr         = pg,
@@ -50,7 +50,7 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
         ]);
 
         var report = await useCase.RunAsync(new HostContext(
-            new DelegateRunLog(output.WriteLine), iterations: TestRun.Iterations, warmup: TestRun.Warmup));
+            new DelegateRunLog(output.WriteLine), iterations: 1, warmup: 0));
 
         Assert.Equal(3, report.Variants.Count);            // Relational + JSONB + MongoDB
         Assert.Equal(7, report.Rows.Count);                // load + 5 query steps + size
@@ -58,7 +58,7 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
             Assert.All(row.Cells, cell =>
             {
                 Assert.NotNull(cell);
-                Assert.Equal(TestRun.Iterations, cell!.Samples);
+                Assert.Equal(1, cell!.Samples);
             }));
 
         await MarkdownReporter.WriteAsync(report, TestPaths.ResultsDir());
@@ -67,11 +67,11 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
     }
 
     // Loads a small known dataset into each store and checks every query returns the expected matches —
-    // present uuid → 1, absent uuid → 0, serial → 1, type → ≥1, update-by-uuid → 1.
+    // present uuid → 1, absent uuid → 0, serial → 1, model → ≥1, update-by-uuid → 1.
     private static async Task AssertStoresReturnExpectedMatches(string pg, string mongo)
     {
-        var devices = DeviceGenerator.Generate(500);
-        var known   = devices[123];
+        const int count = 500;
+        var known = DeviceGenerator.Generate(123);
 
         IDeviceStore[] stores =
         [
@@ -83,12 +83,12 @@ public class DeviceViewsBenchmarkTests(ITestOutputHelper output) : IAsyncLifetim
         foreach (var store in stores)
         {
             await store.ResetAsync(default);
-            await store.InsertManyAsync(devices, default);
+            await store.InsertManyAsync(DeviceGenerator.Stream(count), default);
 
             Assert.Equal(1, await store.FindByUuidAsync([known.Uuid], 1, default));
             Assert.Equal(0, await store.FindByUuidAsync([Guid.NewGuid()], 1, default));
             Assert.Equal(1, await store.FindBySerialAsync([known.SerialNumber], 1, default));
-            Assert.True(await store.FindByTypeAsync([known.Type], 1, 500, default) >= 1);
+            Assert.True(await store.FindByModelAsync([known.Model], 1, count, default) >= 1);
             Assert.Equal(1, await store.UpdateLastSeenAsync([known.Uuid], 1, DateTimeOffset.UtcNow, default));
 
             await store.DisposeAsync();
